@@ -63,6 +63,8 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Ans=true;
                debugPrintlnString("trama ok");
             }
+            else
+               Pool_Put4Line(L);
             Parser_State=STX_STATE;
             break;
       defaul:
