@@ -1,29 +1,25 @@
 #include <string.h>
-#include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
+#include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
 #include "sapi.h"
 
 #include "qmpool.h"
-#include "rx_parser.h"
-#include "pool.h"
-#include "process.h"
+#include "line_parser.h"
+#include "text_process.h"
+#include "pool_array.h"
 
-extern DEBUG_PRINT_ENABLE;
-
-Line_t L;
-Parser_t Parser_State;
-
-void Init_Parser(void)
-{
-   Parser_State=STX_STATE;
-}
+extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
+                           // mandar mensajes de debug desde varios archivos.
+                           // solo poniendo esto como externo y volando static
+                           // en la sapi...
 
 bool Parse_Next_Byte(char B, Line_t* L)
 {
-   bool           Ans=false;
-   static uint8_t Data_Index;
+   bool              Ans          = false;
+   static Parser_t   Parser_State = STX_STATE;
+   static uint8_t    Data_Index;
 
    switch (Parser_State) {
       case STX_STATE:
@@ -61,7 +57,10 @@ bool Parse_Next_Byte(char B, Line_t* L)
       case ETX_STATE:
             if(B==ETX_VALID) {
                Ans=true;
-               debugPrintlnString("trama ok");
+               debugPrintlnString("trama ok");  //debug
+               //aca se deberia enviar la L a la cola. Por lo pronto uso ANS
+               //para que el que llame a esta funcion sepa si termino o no, pero 
+               //si se envia desde aca mismo, no hace falta que devuelva nada
             }
             else
                Pool_Put4Line(L);
@@ -73,8 +72,8 @@ bool Parse_Next_Byte(char B, Line_t* L)
    }
    return Ans;
 }
-
-
+//--------------------------------------------------------------------------------
+//funcion para imprimir la line, para debug.. despues volar
 void Print_Line(Line_t* L)
 {
    char S[100];
@@ -84,22 +83,23 @@ void Print_Line(Line_t* L)
                L->Data);
    debugPrintlnString(S);
 }
-
+//tarea de debug para recibir desde uart y llamar al parser.. pero se
+//reemplazaria con la etapa de recepcion por irq.
 void Parser_Task( void* nil )
 {
+   Line_t L;
    char Buff[2]="";
-   Init_Parser ( );
-   Init_Pools  ( );
    while(TRUE) {
       if(uartReadByte( UART_USB, Buff)) {
-         debugPrintlnString(Buff);
+         debugPrintlnString(Buff);           //eco de debug
          if(Parse_Next_Byte(Buff[0], &L)) {
-            Print_Line(&L);
+            Print_Line(&L);                  //debug
             xQueueSend(L.Op=='0'?Upper_Queue:Lower_Queue,&L,portMAX_DELAY);
          }
       }
-      vTaskDelay         ( 100 / portTICK_RATE_MS ) ; // Envia la tarea al estado bloqueado durante 500ms
+      gpioToggle ( LEDB                   ); //que parezca que estoy haciendo algo
+      vTaskDelay ( 100 / portTICK_RATE_MS );
    }
 }
-
+//--------------------------------------------------------------------------------
 

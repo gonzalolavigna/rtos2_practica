@@ -1,26 +1,29 @@
-#include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
+#include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
 #include "sapi.h"
 
 #include "qmpool.h"
-#include "rx_parser.h"
-#include "process.h"
+#include "line_parser.h"
+#include "text_process.h"
+#include "pool_array.h"
 
 DEBUG_PRINT_ENABLE;
 
 int main(void)
 {
    boardConfig();
-   debugPrintConfigUart ( UART_USB, 115200                   );
-   debugPrintlnString   ( "TP1 - RTOS2 - Lavignia - Slavkin" );
-   gpioWrite( LED3, ON );
+   debugPrintConfigUart ( UART_USB, 115200                                );
+   debugPrintlnString   ( "RTOS2 ***TP1*** [ Lavignia - Moya - Slavkin ]" );
+   gpioWrite            ( LED3, ON                                        );
 
-   Init_Process();
-   xTaskCreate ( Upper_Task  ,"upper"  ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
-   xTaskCreate ( Lower_Task  ,"lower"  ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
-   xTaskCreate ( Parser_Task ,"parser" ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0   );
+   Init_Pool_Array   ( ); // define los arreglos de pools para luego usar
+   Init_Text_Process ( ); // inicializa las colas de frtos que se usaran y alguna otra cosa
+   xTaskCreate ( Upper_Task      ,"uppercasing" ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
+   xTaskCreate ( Lower_Task      ,"lowercasing" ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
+   xTaskCreate ( Print_Line_Task ,"print line"  ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
+   xTaskCreate ( Parser_Task     ,"line parser" ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
 
    vTaskStartScheduler();
    while( TRUE ) {

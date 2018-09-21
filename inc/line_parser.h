@@ -1,5 +1,5 @@
-#ifndef RX_PARSER
-#define RX_PARSER
+#ifndef LINE_PARSER
+#define LINE_PARSER
 
 enum Op_Codes {
    OP_TO_MAY =0,
