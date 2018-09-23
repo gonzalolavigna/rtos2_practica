@@ -10,7 +10,7 @@ enum Op_Codes {
 };
 
 enum Line_Head_Trailer{
-   STX_VALID = 0x55,
+   STX_VALID = 0x55, //Cambiado GLAVIGNA para recibir los comienzos y fin de paquetes especificados en el protocolo
    ETX_VALID = 0xAA
 //   STX_VALID = 'b',
 //   ETX_VALID = 'e'
