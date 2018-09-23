@@ -42,7 +42,7 @@ void QMPool_put(QMPool * const me, void *b)
 void *QMPool_get(QMPool * const me, uint_fast16_t const margin) 
 {
    QFreeBlock *fb;
-   portENTER_CRITICAL();                              // Enter on critical section
+   //portENTER_CRITICAL();                              // Enter on critical section
    if (me->nFree > (QMPoolCtr)margin) {               /* have more free blocks than the requested margin? */
       fb            = (QFreeBlock *)me->free_head;    /* get a free block */
       me->free_head = fb->next;                       /* set the head to the next free block */
@@ -51,7 +51,7 @@ void *QMPool_get(QMPool * const me, uint_fast16_t const margin)
    }
    else
       fb = (QFreeBlock *)0;
-   portEXIT_CRITICAL();                               // Exit from critical section
+   //portEXIT_CRITICAL();                               // Exit from critical section
    return fb;                                         /* return the block or NULL pointer to the caller */
 }
 
