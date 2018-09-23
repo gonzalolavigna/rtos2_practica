@@ -1,1 +1,1 @@
-Hola esta en una prueba para RTOS 2 mayusculizar
+Hola
