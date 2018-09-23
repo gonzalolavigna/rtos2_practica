@@ -15,12 +15,26 @@ extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
                            // solo poniendo esto como externo y volando static
                            // en la sapi...
 
+bool_t uartInitParser (void){
+	uartConfig(UART_USB,115200);
+	uartRxInterruptCallbackSet( UART_USB, parserCallback );
+	uartRxInterruptSet( UART_USB, TRUE );
+	debugPrintlnString("PARSER:UART INICIALIZADA");
+	//TODO: Pensar en el Init que pasa si no esta habilitado el scheduler y hay una IRQ. Amerita un testing? o un esquema mas inteligente?
+	gpioInit(GPIO0,GPIO_OUTPUT); //GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
+	gpioWrite (GPIO0,OFF);
+	gpioInit(GPIO1,GPIO_OUTPUT); //GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
+	gpioWrite (GPIO1,OFF);
+	return TRUE;
+}
+
 bool Parse_Next_Byte(char B, Line_t* L)
 {
    bool              Ans          = false;
    static Parser_t   Parser_State = STX_STATE;
    static uint8_t    Data_Index;
 
+   gpioWrite(GPIO1,ON);
    switch (Parser_State) {
       case STX_STATE:
             Ans=false;
@@ -28,7 +42,7 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Parser_State = OP_STATE;
             break;
       case OP_STATE:
-            if(B>= 0 && B<= 4) { //Cambiado GLAVIGNA para poder recibir scripts y formato ya que es en binario y no ASCII
+            if(B>= 0 && B<= 4) { //GLAVIGNA: Se cambia para poder recibir segun protocolo de la consigna.
                L->Op        = B;
                Parser_State = T_STATE;
             }
@@ -53,7 +67,8 @@ bool Parse_Next_Byte(char B, Line_t* L)
       case ETX_STATE:
     	  if(B==ETX_VALID) {
     		  Ans=true;
-    		  debugPrintlnString("trama ok");  //debug
+
+    		  //debugPrintlnString("trama ok");  //debug //GLAVIGNA:Se elimina este comentario.
     		  //aca se deberia enviar la L a la cola. Por lo pronto uso ANS
     		  //para que el que llame a esta funcion sepa si termino o no, pero
     		  //si se envia desde aca mismo, no hace falta que devuelva nada
@@ -66,6 +81,7 @@ bool Parse_Next_Byte(char B, Line_t* L)
     	  Parser_State=STX_STATE;
     	  break;
    }
+   gpioWrite(GPIO1,OFF);
    return Ans;
 }
 //--------------------------------------------------------------------------------
@@ -79,34 +95,35 @@ void Print_Line(Line_t* L)
                L->Data);
    debugPrintlnString(S);
 }
-//tarea de debug para recibir desde uart y llamar al parser.. pero se
-//reemplazaria con la etapa de recepcion por irq.
-void Parser_Task( void* nil )
-{
-   Line_t L;
-   char Buff[2]="";
-   while(TRUE) {
-      if(uartReadByte( UART_USB, Buff)) {
-         //debugPrintlnString(Buff);           //eco de debug
-         if(Parse_Next_Byte(Buff[0], &L)) {
-            Print_Line(&L);                  //debug
 
-            switch(L.Op){ //Agrego un switch case por si hay mas opciones y acciones que realizar
-            case OP_TO_MAY:
-            	xQueueSend(Upper_Queue,&L,portMAX_DELAY);
-            	break;
-            case OP_TO_MIN:
-        		xQueueSend(Lower_Queue,&L,portMAX_DELAY);
-        		break;
-            default:
-            	debugPrintlnString("PARSER:OPERACION NO IMPLEMENTADA\r\n");
-            	break;
-            }
-         }
-      }
-      gpioToggle ( LEDB                   ); //que parezca que estoy haciendo algo
-      vTaskDelay ( 100 / portTICK_RATE_MS );
-   }
+//Callback para la interrupcion.
+void parserCallback( void* nil )
+{
+	Line_t L;
+	static uint8_t byteReceived;
+	static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
+
+	//Tiempo medido con Analizador logico atencion de la interrucion de 3 us. Para mandar a la cola le lleva 6 us.
+	gpioWrite (GPIO0,ON); //GLAVIGNA: Para medir tiempo de atencion ISR, lo mido con Analizador Logico
+
+	while(uartRxReady(UART_USB)) {
+		byteReceived = uartRxRead(UART_USB);
+		if(Parse_Next_Byte(byteReceived, &L)) {
+			switch(L.Op){ //Agrego un switch case por si hay mas opciones y acciones que realizar
+			case OP_TO_MAY:
+				xQueueSendFromISR(Upper_Queue,(void *)&L,&xHigherPriorityTaskWoken);
+				break;
+			case OP_TO_MIN:
+				xQueueSendFromISR(Lower_Queue,(void *)&L,&xHigherPriorityTaskWoken);
+				break;
+			default:
+				debugPrintlnString("PARSER:OPERACION NO IMPLEMENTADA\r\n");
+				break;
+			}
+		}
+	}
+	gpioWrite (GPIO0,OFF); //GLAVIGNA: Para medir tiempo de atencion ISR, lo mido con Analizador Logico
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 //--------------------------------------------------------------------------------
 

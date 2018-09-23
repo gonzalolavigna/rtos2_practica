@@ -37,8 +37,9 @@ typedef enum Parser_States {
    ETX_STATE
 } Parser_t;
 
-void Init_Parser ( void      );
-void Parser_Task ( void* nil );
+bool_t uartInitParser (void);
+void parserCallback( void* nil );
 void Print_Line  ( Line_t* L );
+bool_t uartInitLineParser (void);
 
 #endif
