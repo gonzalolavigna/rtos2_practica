@@ -36,39 +36,35 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Parser_State=STX_STATE;
             break;
       case T_STATE:
-            if(B>='0' && B<='9') {
-               L->T       = B-'0';
-               Data_Index = 0    ;
-               if(Pool_Get4Line(L))
-                  Parser_State=DATA_STATE;
-               else
-                  Parser_State=STX_STATE;
-            }
-            else
-               Parser_State=STX_STATE;
-            break;
+    	  L->T       = B; //TODO:Test con tamaños con numero entero de pool.Habria que verificar los tamaños pero como el tamño enviado siempre es 1 mas grande, alcanza para poner el \0.
+    	  Data_Index = 0;
+    	  if(Pool_Get4Line(L))
+    		  Parser_State=DATA_STATE;
+    	  else
+    		  Parser_State=STX_STATE;
+    	  break;
       case DATA_STATE:
-               L->Data[Data_Index++]=B;
-               if(Data_Index>=L->T) {
-                  L->Data[Data_Index] = '\0';
-                  Parser_State = ETX_STATE;
-               }
-            break;
+    	  L->Data[Data_Index++]=B;
+    	  if(Data_Index>=L->T) {
+    		  L->Data[Data_Index] = '\0';
+    		  Parser_State = ETX_STATE;
+    	  }
+    	  break;
       case ETX_STATE:
-            if(B==ETX_VALID) {
-               Ans=true;
-               debugPrintlnString("trama ok");  //debug
-               //aca se deberia enviar la L a la cola. Por lo pronto uso ANS
-               //para que el que llame a esta funcion sepa si termino o no, pero 
-               //si se envia desde aca mismo, no hace falta que devuelva nada
-            }
-            else
-               Pool_Put4Line(L);
-            Parser_State=STX_STATE;
-            break;
-      defaul:
-            Parser_State=STX_STATE;
-            break;
+    	  if(B==ETX_VALID) {
+    		  Ans=true;
+    		  debugPrintlnString("trama ok");  //debug
+    		  //aca se deberia enviar la L a la cola. Por lo pronto uso ANS
+    		  //para que el que llame a esta funcion sepa si termino o no, pero
+    		  //si se envia desde aca mismo, no hace falta que devuelva nada
+    	  }
+    	  else
+    		  Pool_Put4Line(L);
+    	  Parser_State=STX_STATE;
+    	  break;
+      default:
+    	  Parser_State=STX_STATE;
+    	  break;
    }
    return Ans;
 }
