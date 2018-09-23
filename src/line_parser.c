@@ -73,7 +73,7 @@ bool Parse_Next_Byte(char B, Line_t* L)
 void Print_Line(Line_t* L)
 {
    char S[100];
-   sprintf( S, "Line: |%c|%c|%s|\r\n",
+   sprintf( S, "Line: |0x%X|0x%X|%s|\r\n",
                L->Op,
                L->T,
                L->Data);
@@ -87,10 +87,10 @@ void Parser_Task( void* nil )
    char Buff[2]="";
    while(TRUE) {
       if(uartReadByte( UART_USB, Buff)) {
-         debugPrintlnString(Buff);           //eco de debug
+         //debugPrintlnString(Buff);           //eco de debug
          if(Parse_Next_Byte(Buff[0], &L)) {
             Print_Line(&L);                  //debug
-            xQueueSend(L.Op=='0'?Upper_Queue:Lower_Queue,&L,portMAX_DELAY);
+            xQueueSend(L.Op==0 ?Upper_Queue:Lower_Queue,&L,portMAX_DELAY); //GLAVIGNA:Parametro para mayusculizar es 0 en decimal y no 0 en ascii, se cambia
          }
       }
       gpioToggle ( LEDB                   ); //que parezca que estoy haciendo algo
