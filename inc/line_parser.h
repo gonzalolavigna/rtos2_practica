@@ -10,10 +10,10 @@ enum Op_Codes {
 };
 
 enum Line_Head_Trailer{
-//   STX_VALID = 0x55,
-//   ETX_VALID = 0xAA
-   STX_VALID = 'b',
-   ETX_VALID = 'e'
+   STX_VALID = 0x55,
+   ETX_VALID = 0xAA
+//   STX_VALID = 'b',
+//   ETX_VALID = 'e'
 };
 
 typedef struct Line_Struct {
