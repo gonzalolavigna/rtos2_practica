@@ -18,11 +18,11 @@ enum Line_Head_Trailer{
 
 typedef struct Line_Struct {
 //   uint8_t Stx;   //debe valer 0x55 para que se considere valida la trama
-   uint8_t Op;    //0: Convertir los datos recibidos a mayúsculas.
-                  //1: Convertir los datos recibidos a minúsculas.
-                  //2: Reportar stack disponible.
-                  //3: Reportar heap disponible.
-                  //4: Mensajes de estado de la aplicación.
+	uint8_t Op;   //0: Convertir los datos recibidos a mayúsculas.
+					//1: Convertir los datos recibidos a minúsculas.
+					//2: Reportar stack disponible.
+                  	//3: Reportar heap disponible.
+                  	//4: Mensajes de estado de la aplicación.
    uint8_t T;     // tamanio del payload;
    char* Data;    //puntero a los datos
    QMPool* Pool;  //pool al que pertenece el contenido de Data

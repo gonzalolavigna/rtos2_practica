@@ -90,7 +90,18 @@ void Parser_Task( void* nil )
          //debugPrintlnString(Buff);           //eco de debug
          if(Parse_Next_Byte(Buff[0], &L)) {
             Print_Line(&L);                  //debug
-            xQueueSend(L.Op==0 ?Upper_Queue:Lower_Queue,&L,portMAX_DELAY); //GLAVIGNA:Parametro para mayusculizar es 0 en decimal y no 0 en ascii, se cambia
+
+            switch(L.Op){ //Agrego un switch case por si hay mas opciones y acciones que realizar
+            case OP_TO_MAY:
+            	xQueueSend(Upper_Queue,&L,portMAX_DELAY);
+            	break;
+            case OP_TO_MIN:
+        		xQueueSend(Lower_Queue,&L,portMAX_DELAY);
+        		break;
+            default:
+            	debugPrintlnString("PARSER:OPERACION NO IMPLEMENTADA\r\n");
+            	break;
+            }
          }
       }
       gpioToggle ( LEDB                   ); //que parezca que estoy haciendo algo
