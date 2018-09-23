@@ -28,7 +28,7 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Parser_State = OP_STATE;
             break;
       case OP_STATE:
-            if(B>='0' && B<='4') {
+            if(B>= 0 && B<= 4) { //Cambiado GLAVIGNA para poder recibir scripts y formato ya que es en binario y no ASCII
                L->Op        = B;
                Parser_State = T_STATE;
             }
