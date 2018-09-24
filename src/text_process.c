@@ -44,25 +44,25 @@ Line_t* To_Lowercase(Line_t* L)
 }
 void Upper_Task( void* nil )
 {
-	Line_t L;
-	while(TRUE) {
-		while (xQueueReceive(Upper_Queue,&L,portMAX_DELAY)==pdFAIL)
-			;
-		Print_Line(&L);                  //debug
-		To_Uppercase  ( &L );
-		xQueueSend(Processed_Queue,&L,portMAX_DELAY);
-	}
+   Line_t L;
+   while(TRUE) {
+      while (xQueueReceive(Upper_Queue,&L,portMAX_DELAY)==pdFAIL)
+         ;
+      Print_Line(&L);                  //debug
+      To_Uppercase  ( &L );
+      xQueueSend(Processed_Queue,&L,portMAX_DELAY);
+   }
 }
 void Lower_Task( void* nil )
 {
-	Line_t L;
-	while(TRUE) {
-		while (xQueueReceive(Lower_Queue,&L,portMAX_DELAY)==pdFAIL)
-			;
-		Print_Line(&L);                  //debug
-		To_Lowercase(&L);
-		xQueueSend(Processed_Queue,&L,portMAX_DELAY);
-	}
+   Line_t L;
+   while(TRUE) {
+      while ( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )==pdFAIL)
+         ;
+      Print_Line(&L);                  //debug
+      To_Lowercase(&L);
+      xQueueSend(Processed_Queue,&L,portMAX_DELAY);
+   }
 }
 
 //esta tarea vuela, hay que reempazarla por la encargada de mandar los datos

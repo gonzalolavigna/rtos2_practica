@@ -10,22 +10,21 @@
 #include "text_process.h"
 #include "pool_array.h"
 
-extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
-                           // mandar mensajes de debug desde varios archivos.
-                           // solo poniendo esto como externo y volando static
-                           // en la sapi...
+extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder mandar mensajes de debug desde varios
+                           // archivos.  solo poniendo esto como externo y volando static en la sapi...
 
 bool_t uartInitParser (void){
-	uartConfig(UART_USB,115200);
-	uartRxInterruptCallbackSet( UART_USB, parserCallback );
-	uartRxInterruptSet( UART_USB, TRUE );
-	debugPrintlnString("PARSER:UART INICIALIZADA");
-	//TODO: Pensar en el Init que pasa si no esta habilitado el scheduler y hay una IRQ. Amerita un testing? o un esquema mas inteligente?
-	gpioInit(GPIO0,GPIO_OUTPUT); //GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
-	gpioWrite (GPIO0,OFF);
-	gpioInit(GPIO1,GPIO_OUTPUT); //GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
-	gpioWrite (GPIO1,OFF);
-	return TRUE;
+   uartConfig                 ( UART_USB,115200            );
+   uartRxInterruptCallbackSet ( UART_USB, parserCallback   );
+   uartRxInterruptSet         ( UART_USB, TRUE             );
+   debugPrintlnString         ( "PARSER:UART INICIALIZADA" );
+   //TODO: Pensar en el Init que pasa si no esta habilitado el scheduler y hay
+   //una IRQ. Amerita un testing? o un esquema mas inteligente?
+   gpioInit  ( GPIO0,GPIO_OUTPUT ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
+   gpioWrite ( GPIO0,OFF         );
+   gpioInit  ( GPIO1,GPIO_OUTPUT ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
+   gpioWrite ( GPIO1,OFF         );
+   return TRUE;
 }
 
 bool Parse_Next_Byte(char B, Line_t* L)
@@ -50,36 +49,32 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Parser_State=STX_STATE;
             break;
       case T_STATE:
-    	  L->T       = B; //TODO:Test con tamaños con numero entero de pool.Habria que verificar los tamaños pero como el tamño enviado siempre es 1 mas grande, alcanza para poner el \0.
-    	  Data_Index = 0;
-    	  if(Pool_Get4Line(L))
-    		  Parser_State=DATA_STATE;
-    	  else
-    		  Parser_State=STX_STATE;
-    	  break;
+        L->T       = B; // TODO:Test con tamaños con numero entero de pool.Habria que verificar
+                        // los tamaños pero como el tamño enviado siempre es 1 mas grande,
+                        // alcanza para poner el \0.
+        Data_Index = 0;
+        if(Pool_Get4Line(L))
+           Parser_State=DATA_STATE;
+        else
+           Parser_State=STX_STATE;
+        break;
       case DATA_STATE:
-    	  L->Data[Data_Index++]=B;
-    	  if(Data_Index>=L->T) {
-    		  L->Data[Data_Index] = '\0';
-    		  Parser_State = ETX_STATE;
-    	  }
-    	  break;
+        L->Data[Data_Index++]=B;
+        if(Data_Index>=L->T) {
+           L->Data[Data_Index] = '\0';
+           Parser_State        = ETX_STATE;
+        }
+        break;
       case ETX_STATE:
-    	  if(B==ETX_VALID) {
-    		  Ans=true;
-
-    		  //debugPrintlnString("trama ok");  //debug //GLAVIGNA:Se elimina este comentario.
-    		  //aca se deberia enviar la L a la cola. Por lo pronto uso ANS
-    		  //para que el que llame a esta funcion sepa si termino o no, pero
-    		  //si se envia desde aca mismo, no hace falta que devuelva nada
-    	  }
-    	  else
-    		  Pool_Put4Line(L);
-    	  Parser_State=STX_STATE;
-    	  break;
+        if(B==ETX_VALID)
+           Ans=true;
+        else
+           Pool_Put4Line(L);
+        Parser_State=STX_STATE;
+        break;
       default:
-    	  Parser_State=STX_STATE;
-    	  break;
+        Parser_State=STX_STATE;
+        break;
    }
    gpioWrite(GPIO1,OFF);
    return Ans;
@@ -99,31 +94,38 @@ void Print_Line(Line_t* L)
 //Callback para la interrupcion.
 void parserCallback( void* nil )
 {
-	Line_t L;
-	static uint8_t byteReceived;
-	static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
+   Line_t L;
+   static uint8_t byteReceived;
+   static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
 
-	//Tiempo medido con Analizador logico atencion de la interrucion de 3 us. Para mandar a la cola le lleva 6 us.
-	gpioWrite (GPIO0,ON); //GLAVIGNA: Para medir tiempo de atencion ISR, lo mido con Analizador Logico
+                         // Tiempo medido con Analizador logico atencion de la
+                         // interrucion de 3 us.  Para mandar a la cola le
+                         // lleva 6 us.
+   gpioWrite (GPIO0,ON); // GLAVIGNA: Para medir tiempo de atencion ISR, lo
+                         // mido con Analizador Logico
 
-	while(uartRxReady(UART_USB)) {
-		byteReceived = uartRxRead(UART_USB);
-		if(Parse_Next_Byte(byteReceived, &L)) {
-			switch(L.Op){ //Agrego un switch case por si hay mas opciones y acciones que realizar
-			case OP_TO_MAY:
-				xQueueSendFromISR(Upper_Queue,(void *)&L,&xHigherPriorityTaskWoken);
-				break;
-			case OP_TO_MIN:
-				xQueueSendFromISR(Lower_Queue,(void *)&L,&xHigherPriorityTaskWoken);
-				break;
-			default:
-				debugPrintlnString("PARSER:OPERACION NO IMPLEMENTADA\r\n");
-				break;
-			}
-		}
-	}
-	gpioWrite (GPIO0,OFF); //GLAVIGNA: Para medir tiempo de atencion ISR, lo mido con Analizador Logico
-	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+   while(uartRxReady(UART_USB)) {
+      byteReceived = uartRxRead(UART_USB);
+      if(Parse_Next_Byte(byteReceived, &L)) {
+         switch(L.Op) { // Agrego un switch case por si hay mas opciones y
+                        // acciones que realizar
+         case OP_TO_MAY:
+            xQueueSendFromISR(Upper_Queue,(void *)&L,&xHigherPriorityTaskWoken);
+            break;
+         case OP_TO_MIN:
+            xQueueSendFromISR(Lower_Queue,(void *)&L,&xHigherPriorityTaskWoken);
+            break;
+         default:
+            debugPrintlnString ( "PARSER:OPERACION NO IMPLEMENTADA\r\n" );
+                        // pslavkin aca hay que devolver el pool
+            Pool_Put4Line(&L);
+            break;
+         }
+      }
+   }
+   gpioWrite (GPIO0,OFF); //GLAVIGNA: Para medir tiempo de atencion ISR, lo
+                          //mido con Analizador Logico
+   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 //--------------------------------------------------------------------------------
 
