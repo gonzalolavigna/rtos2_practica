@@ -94,7 +94,7 @@ void Print_Line(Line_t* L)
 //Callback para la interrupcion.
 void parserCallback( void* nil )
 {
-   Line_t L;
+	static Line_t L;
    static uint8_t byteReceived;
    static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
 
