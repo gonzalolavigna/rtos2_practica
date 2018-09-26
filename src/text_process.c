@@ -26,6 +26,10 @@ void Init_Text_Process(void)
    Upper_Queue     = xQueueCreate ( 10,sizeof(Line_t ));
    Lower_Queue     = xQueueCreate ( 10,sizeof(Line_t ));
    Processed_Queue = xQueueCreate ( 10,sizeof(Line_t ));
+   gpioInit(GPIO2,GPIO_OUTPUT);
+   gpioInit(GPIO3,GPIO_OUTPUT);
+   gpioWrite(GPIO2,OFF);
+   gpioWrite(GPIO3,OFF);
 }
 
 Line_t* To_Uppercase(Line_t* L)
@@ -44,25 +48,29 @@ Line_t* To_Lowercase(Line_t* L)
 }
 void Upper_Task( void* nil )
 {
-   Line_t L;
-   while(TRUE) {
-      while (xQueueReceive(Upper_Queue,&L,portMAX_DELAY)==pdFAIL)
-         ;
-      Print_Line(&L);                  //debug
-      To_Uppercase  ( &L );
-      xQueueSend(Processed_Queue,&L,portMAX_DELAY);
-   }
+	Line_t L;
+	while(TRUE) {
+		if (xQueueReceive(Upper_Queue,&L,portMAX_DELAY)== pdTRUE){
+			gpioWrite(GPIO2,ON);
+			Print_Line(&L);                  //debug
+			To_Uppercase  ( &L );
+			xQueueSend(Processed_Queue,&L,portMAX_DELAY);
+			gpioWrite(GPIO2,OFF);
+		}
+	}
 }
 void Lower_Task( void* nil )
 {
-   Line_t L;
-   while(TRUE) {
-      while ( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )==pdFAIL)
-         ;
-      Print_Line(&L);                  //debug
-      To_Lowercase(&L);
-      xQueueSend(Processed_Queue,&L,portMAX_DELAY);
-   }
+	Line_t L;
+	while(TRUE) {
+		if( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )== pdTRUE){
+			gpioWrite(GPIO3,ON);
+			Print_Line(&L);                  //debug
+			To_Lowercase(&L);
+			xQueueSend(Processed_Queue,&L,portMAX_DELAY);
+			gpioWrite(GPIO3,OFF);
+		}
+	}
 }
 
 //esta tarea vuela, hay que reempazarla por la encargada de mandar los datos
