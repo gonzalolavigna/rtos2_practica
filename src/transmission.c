@@ -28,8 +28,8 @@ circularBufferNew ( cola_tx_proactivas,
 // Inicializacion de IRQ para UART TX
 bool_t uartInitTx (void){
 	uartTxInterruptCallbackSet( UART_USB, uart_TX_ISR );
-	uartTxInterruptSet( UART_USB, TRUE );
 	debugPrintlnString("TX: IRQ INICIALIZADA");
+	uartTxInterruptSet( UART_USB, TRUE );
 	return TRUE;
 }
 
@@ -67,14 +67,14 @@ static void txCallback ( void * Puart_tp )
 }
 
 // Handler IRQ FIFO de TX de UART USB vacia
-void uart_TX_ISR ()
+void uart_TX_ISR (void * nil)
 {
 	static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
 	static Driver_proactivo txpro;
 	static int32_t faltan_transmitir = 0;
 	static uint32_t i = 0;
 	uint8_t byte_a_enviar;
-	circularBufferStatus_t estado_cola;
+	circularBufferStatus_t estado_cola = CIRCULAR_BUFFER_EMPTY;
 
 	if ( faltan_transmitir > 0) {
 		byte_a_enviar = txpro.pBuffer[i++];
@@ -98,5 +98,5 @@ void uart_TX_ISR ()
 		}
 	}
 
-	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+//	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
