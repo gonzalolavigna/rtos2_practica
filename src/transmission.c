@@ -64,8 +64,10 @@ static void txCallback ( void * Puart_tp )
 {
     uartTxInterruptSet( UART_USB, FALSE );		// Deshabilito THRE IRQ porque
 												// ya no tengo más para transmitir
+    uartRxInterruptSet( UART_USB, TRUE );		// Habilito IRQ de RX que
+    											// uartTxInterruptSet deshabilito :(
 	Driver_proactivo * uart_tp = (Driver_proactivo *) Puart_tp;
-	QMPool_put (Pool_Select(uart_tp->largo),uart_tp->pBuffer);
+//	QMPool_put (Pool_Select(uart_tp->largo),uart_tp->pBuffer);
 }
 
 // Handler IRQ FIFO de TX de UART USB vacia
@@ -99,6 +101,4 @@ void uart_TX_ISR (void * nil)
 			uartTxWrite (UART_USB, byte_a_enviar);
 		}
 	}
-
-//	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
