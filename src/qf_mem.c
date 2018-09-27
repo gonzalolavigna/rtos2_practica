@@ -32,11 +32,11 @@ void QMPool_init(QMPool * const me, void * const poolSto, uint_fast32_t poolSize
 
 void QMPool_put(QMPool * const me, void *b) 
 {
-   portENTER_CRITICAL();                                  // Enter on critical section
+   portENTER_CRITICAL();                                     // Enter on critical section
       ((QFreeBlock *)b)->next = (QFreeBlock *)me->free_head; /* link into list */
-      me->free_head = b;                                     /* set as new head of the free list */
+      me->free_head           = b;                           /* set as new head of the free list */
       ++me->nFree;                                           /* one more free block in this pool */
-   portEXIT_CRITICAL();                                   // Exit from critical section
+   portEXIT_CRITICAL();                                      // Exit from critical section
 }
 
 void *QMPool_get(QMPool * const me, uint_fast16_t const margin) 
