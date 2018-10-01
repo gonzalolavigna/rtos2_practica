@@ -27,8 +27,8 @@ circularBufferNew ( cola_tx_proactivas,
 
 // Inicializacion de IRQ para UART TX
 bool_t uartInitTx (void){
-   uartTxInterruptCallbackSet ( UART_USB, uart_TX_ISR  );
-   debugPrintlnString         ( "TX: IRQ INICIALIZADA" );
+   //uartTxInterruptCallbackSet ( UART_USB, uart_TX_ISR  );
+//   debugPrintlnString         ( "TX: IRQ INICIALIZADA" );
 // uartTxInterruptSet( UART_USB, TRUE );
    return TRUE;
 }
@@ -49,21 +49,21 @@ void Transmit_Task ( void* nil )
      uart_txpro.largo    = L.T;
      uart_txpro.callback = txCallback;
      circularBufferWrite ( &cola_tx_proactivas, (uint8_t *) &uart_txpro);
-     uartTxInterruptSet( UART_USB, TRUE );      // Habilito THRE IRQ sólo mientras hayan datos para transmitir
-     if( uartTxReady(UART_USB) ) {
-        uart_TX_ISR ();
-     }
+ //    uartTxInterruptSet( UART_USB, TRUE );      // Habilito THRE IRQ sólo mientras hayan datos para transmitir
+//     if( uartTxReady(UART_USB) ) {
+//        uart_TX_ISR ();
+//     }
    }
 }
 
 // Callback de transmision proactiva
 static void txCallback ( void * Puart_tp )
 {
-    uartTxInterruptSet( UART_USB, FALSE ); // Deshabilito THRE IRQ porque
-                                           // ya no tengo más para transmitir
-    uartRxInterruptSet( UART_USB, TRUE );  // Habilito IRQ de RX que
-                                           // uartTxInterruptSet deshabilito :(
-   Driver_proactivo * uart_tp = (Driver_proactivo *) Puart_tp;
+//    uartTxInterruptSet( UART_USB, FALSE ); // Deshabilito THRE IRQ porque
+//                                           // ya no tengo más para transmitir
+//    uartRxInterruptSet( UART_USB, TRUE );  // Habilito IRQ de RX que
+//                                           // uartTxInterruptSet deshabilito :(
+//   Driver_proactivo * uart_tp = (Driver_proactivo *) Puart_tp;
 // QMPool_put (Pool_Select(uart_tp->largo),uart_tp->pBuffer);
 }
 

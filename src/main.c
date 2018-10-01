@@ -15,9 +15,10 @@ DEBUG_PRINT_ENABLE;
 int main(void)
 {
    boardConfig();
-   debugPrintConfigUart ( UART_USB, 115200                                );
-   debugPrintlnString   ( "RTOS2 ***TP1*** [ Lavignia - Moya - Slavkin ]" );
+//   debugPrintConfigUart ( UART_USB, 115200                                );
+//   debugPrintlnString   ( "RTOS2 ***TP1*** [ Lavignia - Moya - Slavkin ]" );
    gpioWrite            ( LED3, ON                                        );
+   gpioWrite            ( LEDR, ON                                         );
 
    Init_Pool_Array   ( ); // define los arreglos de pools para luego usar
    Init_Text_Process ( ); // inicializa las colas de frtos que se usaran y alguna otra cosa
@@ -29,9 +30,7 @@ int main(void)
    //xTaskCreate ( Print_Line_Task ,"print line"   ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
    //xTaskCreate ( Parser_Task     ,"line parser"  ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 ); //Se elimina la tarea pese a mi gusto queda el parset dentro de la IRQ.
 
-   debugPrintlnString   ( "StartSchedule" );
    vTaskStartScheduler();
-   debugPrintlnString   ( "StartSchedule" );
    while( TRUE ) {
    }
    return 0;

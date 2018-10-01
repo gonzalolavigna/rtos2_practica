@@ -14,16 +14,14 @@ extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder mandar mensajes d
                            // archivos.  solo poniendo esto como externo y volando static en la sapi...
 
 bool_t uartInitParser (void){
-   uartConfig                 ( UART_USB,115200            );
-   uartRxInterruptCallbackSet ( UART_USB, parserCallback   );
-   uartRxInterruptSet         ( UART_USB, TRUE             );
-   debugPrintlnString         ( "PARSER:UART INICIALIZADA" );
-   //TODO: Pensar en el Init que pasa si no esta habilitado el scheduler y hay
-   //una IRQ. Amerita un testing? o un esquema mas inteligente?
-   gpioInit  ( GPIO0,GPIO_OUTPUT ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
-   gpioWrite ( GPIO0,OFF         );
-   gpioInit  ( GPIO1,GPIO_OUTPUT ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
-   gpioWrite ( GPIO1,OFF         );
+   uartConfig      ( UART_USB ,115200                             );
+   uartCallbackSet ( UART_USB ,UART_RECEIVE ,parserCallback ,NULL );
+   uartInterrupt   ( UART_USB ,true                               ); // TODO: Pensar en el Init que pasa si no esta habilitado el scheduler y hay una IRQ. Amerita un testing? o un esquema mas inteligente?
+   gpioWrite            ( LEDR, OFF                                        );
+//   gpioInit        ( GPIO0    ,GPIO_OUTPUT                        ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
+//   gpioWrite       ( GPIO0    ,OFF                                );
+//   gpioInit        ( GPIO1    ,GPIO_OUTPUT                        ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
+//   gpioWrite       ( GPIO1    ,OFF                                );
    return TRUE;
 }
 
@@ -94,7 +92,7 @@ void Print_Line(Line_t* L)
 //Callback para la interrupcion.
 void parserCallback( void* nil )
 {
-	static Line_t L;
+   static Line_t L;
    static uint8_t byteReceived;
    static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
 
@@ -103,6 +101,7 @@ void parserCallback( void* nil )
                          // lleva 6 us.
    gpioWrite (GPIO0,ON); // GLAVIGNA: Para medir tiempo de atencion ISR, lo
                          // mido con Analizador Logico
+   gpioToggle (LEDB);
 
    while(uartRxReady(UART_USB)) {
       byteReceived = uartRxRead(UART_USB);
@@ -117,8 +116,7 @@ void parserCallback( void* nil )
             break;
          default:
             debugPrintlnString ( "PARSER:OPERACION NO IMPLEMENTADA\r\n" );
-                        // pslavkin aca hay que devolver el pool
-            Pool_Put4Line(&L);
+            Pool_Put4Line(&L); // pslavkin aca hay que devolver el pool
             break;
          }
       }
