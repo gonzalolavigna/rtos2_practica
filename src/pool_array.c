@@ -17,7 +17,6 @@ extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
 #define MAX_REQUEST_SIZE 256     //lo maximo que se puede pedir
 #define MIN_BLOCK_SIZE   16      //el pool mas chico de 16, el resto incrementa linealmente
 
-
 char Mem_Pool_Sto[ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE][MAX_POOL_SIZE];
 QMPool Mem_Pool  [ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE];
 
@@ -38,11 +37,14 @@ QMPool* Pool_Select(uint8_t Size)
 }
 bool Pool_Get4Line(Line_t* L)
 {
-   L->Pool=Pool_Select ( L->T      );
-   L->Data=QMPool_get  ( L->Pool,0 );
+   L->Data=QMPool_get ( Pool_Select ( L->T ),0 );
    return L->Data!=NULL;
 }
 void Pool_Put4Line(Line_t* L)
 {
-   QMPool_put ( L->Pool,L->Data );
+   QMPool_put ( Pool4Size(L->T),L->Data );
+}
+QMPool* Pool4Size(uint8_t Size)
+{
+   return &Mem_Pool[Size/MIN_BLOCK_SIZE];
 }

@@ -4,98 +4,51 @@
 #include "task.h"
 #include "sapi.h"
 
-#include "transmission.h"
 #include "qmpool.h"
+#include "transmission.h"
 #include "line_parser.h"
 #include "pool_array.h"
 #include "text_process.h"
+#include "uart_driver.h"
 
-#define CANTIDAD_ITEMS_COLA_TXPRO      8
+QueueHandle_t Processed_Queue;   //una vez procesada la linea, viene a esta cola
 
-extern DEBUG_PRINT_ENABLE;
+void Pool_Put4Uart_Tx_t(Driver_proactivo* D)
+{
+   QMPool_put ( Pool4Size(D->largo ),D->pBuffer );
+}
 
-typedef struct Driver_proactivo_st {
-   uint8_t *         pBuffer ;
-   uint32_t          largo   ;
-   callBackFuncPtr_t callback;
-} Driver_proactivo;
-
-circularBufferNew ( cola_tx_proactivas,
-      sizeof(Driver_proactivo),
-      CANTIDAD_ITEMS_COLA_TXPRO );
-
-
-// Inicializacion de IRQ para UART TX
-bool_t uartInitTx (void){
-   //uartTxInterruptCallbackSet ( UART_USB, uart_TX_ISR  );
-//   debugPrintlnString         ( "TX: IRQ INICIALIZADA" );
-// uartTxInterruptSet( UART_USB, TRUE );
-   return TRUE;
+void Data2Uart_Fifo(uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback )
+{
+  Driver_proactivo uart_txpro;
+  uart_txpro.pBuffer  = Data;
+  uart_txpro.largo    = Size;
+  uart_txpro.callback = Callback;
+  circularBufferWrite ( &cola_tx_proactivas ,(uint8_t * )&uart_txpro);
 }
 
 void Transmit_Task ( void* nil )
 {
    Line_t L;
-   int i;
-   Driver_proactivo uart_txpro;
+   uint8_t Aux_Buf[2];
+   Processed_Queue = xQueueCreate ( 10,sizeof(Line_t ));
 
-   circularBufferInit( cola_tx_proactivas, sizeof(Driver_proactivo), 8 );
-
-// Repetir por siempre
    while (TRUE) {
      xQueueReceive ( Processed_Queue, &L, portMAX_DELAY );
 
-     uart_txpro.pBuffer  = L.Data;
-     uart_txpro.largo    = L.T;
-     uart_txpro.callback = txCallback;
-     circularBufferWrite ( &cola_tx_proactivas, (uint8_t *) &uart_txpro);
- //    uartTxInterruptSet( UART_USB, TRUE );      // Habilito THRE IRQ sólo mientras hayan datos para transmitir
-//     if( uartTxReady(UART_USB) ) {
-//        uart_TX_ISR ();
-//     }
-   }
-}
+     Aux_Buf[0] = STX_VALID; // header
+     Aux_Buf[1] = L.Op;      // operacion
+     Data2Uart_Fifo ( Aux_Buf ,2   ,NULL );
 
-// Callback de transmision proactiva
-static void txCallback ( void * Puart_tp )
-{
-//    uartTxInterruptSet( UART_USB, FALSE ); // Deshabilito THRE IRQ porque
-//                                           // ya no tengo más para transmitir
-//    uartRxInterruptSet( UART_USB, TRUE );  // Habilito IRQ de RX que
-//                                           // uartTxInterruptSet deshabilito :(
-//   Driver_proactivo * uart_tp = (Driver_proactivo *) Puart_tp;
-// QMPool_put (Pool_Select(uart_tp->largo),uart_tp->pBuffer);
-}
+     Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )Pool_Put4Uart_Tx_t );
 
-// Handler IRQ FIFO de TX de UART USB vacia
-void uart_TX_ISR (void * nil)
-{
-   static BaseType_t       xHigherPriorityTaskWoken = pdFALSE;
-   static Driver_proactivo txpro;
-   static int32_t          faltan_transmitir        = 0;
-   static uint32_t         i                        = 0;
-   uint8_t                 byte_a_enviar;
-   circularBufferStatus_t  estado_cola              = CIRCULAR_BUFFER_EMPTY;
+     Aux_Buf[0] = ETX_VALID; // trailer
+     Data2Uart_Fifo ( Aux_Buf ,1   ,NULL );
 
-   if ( faltan_transmitir > 0) {
-      byte_a_enviar = txpro.pBuffer[i++];
-      uartTxWrite (UART_USB, byte_a_enviar);
-      faltan_transmitir--;
-      if (faltan_transmitir==0)
-      {
-         ( * txpro.callback )((void*)&txpro); // Llamo al Callback apenas
-                                              // despacho el ultimo dato
-      }
-   }
-   else
-   {
-      i = 0;
-      faltan_transmitir = 0;
-      estado_cola = circularBufferRead( &cola_tx_proactivas, (uint8_t *) &txpro);
-      if( estado_cola != CIRCULAR_BUFFER_EMPTY) {
-         faltan_transmitir = txpro.largo-1;
-         byte_a_enviar     = txpro.pBuffer[i++];
-         uartTxWrite (UART_USB, byte_a_enviar);
-      }
+     //debug para generar un corte de linea por cada trama
+     Aux_Buf[0] = '\r';
+     Aux_Buf[1] = '\n';
+     Data2Uart_Fifo ( Aux_Buf ,2   ,NULL );
+     uartCallbackSet ( UART_USB ,UART_TRANSMITER_FREE ,uartUsbSendCallback ,NULL );
    }
 }

@@ -1,9 +1,7 @@
 #ifndef TRANSMISSION
 #define TRANSMISSION
 
-bool_t         uartInitTx    ( void      );
-void           uart_TX_ISR   (           );
-static void    txCallback    ( void* nil );
+extern QueueHandle_t Processed_Queue;   //una vez procesada la linea, viene a esta cola
 void           Transmit_Task ( void* nil );
 
 #endif

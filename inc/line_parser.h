@@ -10,22 +10,19 @@ enum Op_Codes {
 };
 
 enum Line_Head_Trailer{
-   STX_VALID = 0x55, //Cambiado GLAVIGNA para recibir los comienzos y fin de paquetes especificados en el protocolo
+   STX_VALID = 0x55,
    ETX_VALID = 0xAA
-//   STX_VALID = 'b',
-//   ETX_VALID = 'e'
 };
 
 typedef struct Line_Struct {
 //   uint8_t Stx;   //debe valer 0x55 para que se considere valida la trama
-	uint8_t Op;   //0: Convertir los datos recibidos a mayúsculas.
-					//1: Convertir los datos recibidos a minúsculas.
-					//2: Reportar stack disponible.
-                  	//3: Reportar heap disponible.
-                  	//4: Mensajes de estado de la aplicación.
-   uint8_t T;     // tamanio del payload;
-   char* Data;    //puntero a los datos
-   QMPool* Pool;  //pool al que pertenece el contenido de Data
+   uint8_t Op;   // 0: Convertir los datos recibidos a mayúsculas.
+                 // 1: Convertir los datos recibidos a minúsculas.
+                 // 2: Reportar stack disponible.
+                 // 3: Reportar heap disponible.
+                 // 4: Mensajes de estado de la aplicación.
+   uint8_t T;    // tamanio del payload;
+   char* Data;   // puntero a los datos
 //   uint8_t Etx;   //0xAA para dar por valida la trama
 } Line_t;
 
@@ -37,9 +34,9 @@ typedef enum Parser_States {
    ETX_STATE
 } Parser_t;
 
-bool_t uartInitParser (void);
-void parserCallback( void* nil );
-void Print_Line  ( Line_t* L );
-bool_t uartInitLineParser (void);
+void uartInitParser       ( void      );
+void parserCallback       ( void* nil );
+void Print_Line           ( Line_t* L );
+bool_t uartInitLineParser ( void      );
 
 #endif

@@ -30,7 +30,7 @@ void QMPool_init(QMPool * const me, void * const poolSto, uint_fast32_t poolSize
     me->end   = fb;                                 /* the last block in this pool */
 }
 
-void QMPool_put(QMPool * const me, void *b) 
+void QMPool_put(QMPool * const me, void *b)
 {
 //   portENTER_CRITICAL();                                  // Enter on critical section
       ((QFreeBlock *)b)->next = (QFreeBlock *)me->free_head; /* link into list */
