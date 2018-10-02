@@ -18,15 +18,6 @@ void Pool_Put4Uart_Tx_t(Driver_proactivo* D)
    QMPool_put ( Pool4Size(D->largo ),D->pBuffer );
 }
 
-void Data2Uart_Fifo(uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback )
-{
-  Driver_proactivo uart_txpro;
-  uart_txpro.pBuffer  = Data;
-  uart_txpro.largo    = Size;
-  uart_txpro.callback = Callback;
-  circularBufferWrite ( &cola_tx_proactivas ,(uint8_t * )&uart_txpro);
-}
-
 void Transmit_Task ( void* nil )
 {
    Line_t L;

@@ -27,6 +27,15 @@ void Uart_Driver_Init (void){
    circularBufferInit ( cola_tx_proactivas, sizeof(Driver_proactivo ), CANTIDAD_ITEMS_COLA_TXPRO );
 }
 
+void Data2Uart_Fifo(uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback )
+{
+  Driver_proactivo uart_txpro;
+  uart_txpro.pBuffer  = Data;
+  uart_txpro.largo    = Size;
+  uart_txpro.callback = Callback;
+  circularBufferWrite ( &cola_tx_proactivas ,(uint8_t * )&uart_txpro);
+}
+
 void uartUsbSendCallback (void * nil)
 {
    BaseType_t xHigherPriorityTaskWoken = pdFALSE;

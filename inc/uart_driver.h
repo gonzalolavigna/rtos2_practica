@@ -9,7 +9,8 @@ typedef struct Driver_proactivo_st {
 
 circularBuffer_t cola_tx_proactivas;
 
-void    Uart_Driver_Init    ( void );
-void    uartUsbSendCallback (      );
+void     Uart_Driver_Init    ( void                                                   );
+void     Data2Uart_Fifo      ( uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback );
+void     uartUsbSendCallback (                                                        );
 
 #endif
