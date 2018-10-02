@@ -13,11 +13,6 @@ extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
                            // solo poniendo esto como externo y volando static
                            // en la sapi...
 
-#define MAX_POOL_SIZE    512     //el tamanio de cada pool (todos iguales)
-#define MAX_REQUEST_SIZE 256     //lo maximo que se puede pedir
-#define MIN_BLOCK_SIZE   16      //el pool mas chico de 16, el resto incrementa linealmente
-
-
 char Mem_Pool_Sto[ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE][MAX_POOL_SIZE];
 QMPool Mem_Pool  [ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE];
 
@@ -45,4 +40,14 @@ bool Pool_Get4Line(Line_t* L)
 void Pool_Put4Line(Line_t* L)
 {
    QMPool_put ( L->Pool,L->Data );
+}
+
+bool Pool_Get4Token(Line_t* L)
+{
+   L->Token=QMPool_get  ( Pool_Select(sizeof(Token_t)),0 );
+   return L->Token!=NULL;
+}
+void Pool_Put4Token(Line_t* L)
+{
+   QMPool_put ( Pool_Select(sizeof(Token_t)),L->Token );
 }

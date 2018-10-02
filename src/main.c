@@ -9,6 +9,7 @@
 #include "text_process.h"
 #include "pool_array.h"
 #include "transmission.h"
+#include "performance.h"
 
 DEBUG_PRINT_ENABLE;
 
@@ -23,11 +24,10 @@ int main(void)
    Init_Text_Process ( ); // inicializa las colas de frtos que se usaran y alguna otra cosa
    uartInitParser    ( );
    uartInitTx        ( );
-   xTaskCreate ( Upper_Task      ,"uppercasing"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
-   xTaskCreate ( Lower_Task      ,"lowercasing"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
-   xTaskCreate ( Transmit_Task   ,"proactiveTx"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+1 ,0 );
-   //xTaskCreate ( Print_Line_Task ,"print line"   ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 );
-   //xTaskCreate ( Parser_Task     ,"line parser"  ,configMINIMAL_STACK_SIZE*2 ,0 ,tskIDLE_PRIORITY+1 ,0 ); //Se elimina la tarea pese a mi gusto queda el parset dentro de la IRQ.
+   xTaskCreate ( Upper_Task                ,"uppercasing"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
+   xTaskCreate ( Lower_Task                ,"lowercasing"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
+   xTaskCreate ( Transmit_Task             ,"proactiveTx"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+1 ,0 );
+   xTaskCreate ( Performance_Task          ,"performeter"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+1 ,0 );
 
    debugPrintlnString   ( "StartSchedule" );
    vTaskStartScheduler();

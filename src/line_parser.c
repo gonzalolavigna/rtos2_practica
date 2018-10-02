@@ -9,9 +9,13 @@
 #include "line_parser.h"
 #include "text_process.h"
 #include "pool_array.h"
+#include "performance.h"
 
 extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder mandar mensajes de debug desde varios
                            // archivos.  solo poniendo esto como externo y volando static en la sapi...
+
+static  uint32_t tiempo_de_llegada;
+static  uint32_t tiempo_de_recepcion;
 
 bool_t uartInitParser (void){
    uartConfig                 ( UART_USB,115200            );
@@ -36,12 +40,14 @@ bool Parse_Next_Byte(char B, Line_t* L)
    gpioWrite(GPIO1,ON);
    switch (Parser_State) {
       case STX_STATE:
+    	    tiempo_de_llegada = now();
+    	    L->Token = NULL;
             Ans=false;
             if(B==STX_VALID)
                Parser_State = OP_STATE;
             break;
       case OP_STATE:
-            if(B>= 0 && B<= 4) { //GLAVIGNA: Se cambia para poder recibir segun protocolo de la consigna.
+            if(B>= 0 && B<= 5) { //GLAVIGNA: Se cambia para poder recibir segun protocolo de la consigna.
                L->Op        = B;
                Parser_State = T_STATE;
             }
@@ -49,7 +55,7 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Parser_State=STX_STATE;
             break;
       case T_STATE:
-        L->T       = B; // TODO:Test con tamaños con numero entero de pool.Habria que verificar
+    	L->T       = B ;// TODO:Test con tamaños con numero entero de pool.Habria que verificar
                         // los tamaños pero como el tamño enviado siempre es 1 mas grande,
                         // alcanza para poner el \0.
         Data_Index = 0;
@@ -60,16 +66,22 @@ bool Parse_Next_Byte(char B, Line_t* L)
         break;
       case DATA_STATE:
         L->Data[Data_Index++]=B;
-        if(Data_Index>=L->T) {
-           L->Data[Data_Index] = '\0';
-           Parser_State        = ETX_STATE;
+        if(Data_Index>= L->T) {
+            L->Data[Data_Index] = '\0';
+            Parser_State               = ETX_STATE;
         }
         break;
       case ETX_STATE:
         if(B==ETX_VALID)
-           Ans=true;
+        	{
+        	tiempo_de_recepcion = now();
+        	Ans=true;
+        	}
         else
-           Pool_Put4Line(L);
+            {
+            Pool_Put4Line(L);
+            Pool_Put4Token(L);
+            }
         Parser_State=STX_STATE;
         break;
       default:
@@ -94,7 +106,7 @@ void Print_Line(Line_t* L)
 //Callback para la interrupcion.
 void parserCallback( void* nil )
 {
-	static Line_t L;
+   static Line_t L;
    static uint8_t byteReceived;
    static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
 
@@ -115,6 +127,16 @@ void parserCallback( void* nil )
          case OP_TO_MIN:
             xQueueSendFromISR(Lower_Queue,(void *)&L,&xHigherPriorityTaskWoken);
             break;
+         case OP_PERFORMANCE:
+        	Pool_Get4Token(&L);		// Falta control de error
+        	L.Token->id_de_paquete = id_de_paquete++;
+        	L.Token->payload = L.Data;
+        	L.Token->tiempo_de_llegada = tiempo_de_llegada;
+        	L.Token->tiempo_de_recepcion = tiempo_de_recepcion;
+        	L.Token->largo_del_paquete = L.T;
+        	L.Token->memoria_alojada = L.T/MIN_BLOCK_SIZE;	//TODO: No esta funcionando
+            xQueueSendFromISR(Performance_Queue,(void *)&L,&xHigherPriorityTaskWoken);
+            break;
          default:
             debugPrintlnString ( "PARSER:OPERACION NO IMPLEMENTADA\r\n" );
                         // pslavkin aca hay que devolver el pool
@@ -128,4 +150,3 @@ void parserCallback( void* nil )
    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 //--------------------------------------------------------------------------------
-

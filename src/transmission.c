@@ -1,3 +1,13 @@
+// Requiere el cambio propuesto por Leonardo Urrego para sapi_uart.c que es:
+// Despues de la linea:
+// uint8_t status = Chip_UART_ReadLineStatus( lpcUarts[uart].uartAddr );
+// agregar esta:
+// uint32_t pendingInterrupt = Chip_UART_ReadIntIDReg( lpcUarts[ uart ].uartAddr );
+// y cambiar la linea:
+// if( ( status & UART_LSR_THRE ) && // uartTxReady
+// por esta:
+// if( ( pendingInterrupt & UART_IIR_INTID_THRE ) && // uartTxReady
+
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -9,68 +19,75 @@
 #include "line_parser.h"
 #include "pool_array.h"
 #include "text_process.h"
+#include "performance.h"
 
 #define CANTIDAD_ITEMS_COLA_TXPRO      8
 
 extern DEBUG_PRINT_ENABLE;
 
-typedef struct Driver_proactivo_st {
-   uint8_t *         pBuffer ;
-   uint32_t          largo   ;
-   callBackFuncPtr_t callback;
-} Driver_proactivo;
-
 circularBufferNew ( cola_tx_proactivas,
       sizeof(Driver_proactivo),
       CANTIDAD_ITEMS_COLA_TXPRO );
+
+volatile uint32_t tiempo_de_salida;
+volatile uint32_t tiempo_de_transmision;
+
+void Transmit_Task ( void* nil )
+{
+   Line_t L;
+
+   while (TRUE) {
+	   xQueueReceive(Processed_Queue,&L,portMAX_DELAY);
+	   UART_TX_Proact ( L.Data,L.T,(L.Token==NULL)?txCallback:completionHandler);
+   }
+}
+
+// Callback de transmision proactiva de linea
+void txCallback ( void * Puart_tp )
+{
+   Driver_proactivo * uart_tp = (Driver_proactivo *) Puart_tp;
+   QMPool_put (Pool_Select(uart_tp->largo),uart_tp->pBuffer);
+}
+
+// Callback de transmision proactiva de linea con medida de performance
+void completionHandler ( void * Puart_tp )
+{
+       tiempo_de_transmision = now();
+}
 
 
 // Inicializacion de IRQ para UART TX
 bool_t uartInitTx (void){
    uartTxInterruptCallbackSet ( UART_USB, uart_TX_ISR  );
    debugPrintlnString         ( "TX: IRQ INICIALIZADA" );
-// uartTxInterruptSet( UART_USB, TRUE );
+   uartTxInterruptSet( UART_USB, TRUE );
    return TRUE;
 }
 
-void Transmit_Task ( void* nil )
+
+void UART_TX_Proact( uint8_t * pBuffer, uint32_t largo, callBackFuncPtr_t callback)
 {
-   Line_t L;
-   int i;
-   Driver_proactivo uart_txpro;
+	static bool_t primera_vez = TRUE;
+	Driver_proactivo uart_txpro;
+	if (primera_vez) {
+		circularBufferInit( cola_tx_proactivas, sizeof(Driver_proactivo), 8 );
+	}
 
-   circularBufferInit( cola_tx_proactivas, sizeof(Driver_proactivo), 8 );
+    uart_txpro.pBuffer  = pBuffer;
+    uart_txpro.largo    = largo;
+    uart_txpro.callback = callback;
+    circularBufferWrite ( &cola_tx_proactivas, (uint8_t *) &uart_txpro);
 
-// Repetir por siempre
-   while (TRUE) {
-     xQueueReceive ( Processed_Queue, &L, portMAX_DELAY );
-
-     uart_txpro.pBuffer  = L.Data;
-     uart_txpro.largo    = L.T;
-     uart_txpro.callback = txCallback;
-     circularBufferWrite ( &cola_tx_proactivas, (uint8_t *) &uart_txpro);
-     uartTxInterruptSet( UART_USB, TRUE );      // Habilito THRE IRQ sólo mientras hayan datos para transmitir
-     if( uartTxReady(UART_USB) ) {
-        uart_TX_ISR ();
-     }
-   }
+    	if( uartTxReady(UART_USB) ) {
+    		uart_TX_ISR ();
+    	}
+    primera_vez = FALSE;
 }
 
-// Callback de transmision proactiva
-static void txCallback ( void * Puart_tp )
-{
-    uartTxInterruptSet( UART_USB, FALSE ); // Deshabilito THRE IRQ porque
-                                           // ya no tengo más para transmitir
-    uartRxInterruptSet( UART_USB, TRUE );  // Habilito IRQ de RX que
-                                           // uartTxInterruptSet deshabilito :(
-   Driver_proactivo * uart_tp = (Driver_proactivo *) Puart_tp;
-// QMPool_put (Pool_Select(uart_tp->largo),uart_tp->pBuffer);
-}
 
 // Handler IRQ FIFO de TX de UART USB vacia
-void uart_TX_ISR (void * nil)
+static void uart_TX_ISR (void * nil)
 {
-   static BaseType_t       xHigherPriorityTaskWoken = pdFALSE;
    static Driver_proactivo txpro;
    static int32_t          faltan_transmitir        = 0;
    static uint32_t         i                        = 0;
@@ -96,6 +113,7 @@ void uart_TX_ISR (void * nil)
          faltan_transmitir = txpro.largo-1;
          byte_a_enviar     = txpro.pBuffer[i++];
          uartTxWrite (UART_USB, byte_a_enviar);
+         tiempo_de_salida = now();
       }
    }
 }

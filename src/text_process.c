@@ -10,6 +10,8 @@
 #include "line_parser.h"
 #include "text_process.h"
 #include "pool_array.h"
+#include "transmission.h"
+#include "performance.h"
 
 extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
                            // mandar mensajes de debug desde varios archivos.
@@ -19,13 +21,15 @@ extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
 QueueHandle_t Upper_Queue;       //cola para mensajes que seran mayusculizados
 QueueHandle_t Lower_Queue;       //para los que seran pasados a minuscula
 QueueHandle_t Processed_Queue;   //una vez procesada la linea, viene a esta cola
+QueueHandle_t Performance_Queue; //cola para mensajes a medir performance
 
 void Init_Text_Process(void)
 {
    //TODO: definir el largo apropiado.. por ahora 10
-   Upper_Queue     = xQueueCreate ( 10,sizeof(Line_t ));
-   Lower_Queue     = xQueueCreate ( 10,sizeof(Line_t ));
-   Processed_Queue = xQueueCreate ( 10,sizeof(Line_t ));
+   Upper_Queue       = xQueueCreate ( 10,sizeof(Line_t  ));
+   Lower_Queue       = xQueueCreate ( 10,sizeof(Line_t  ));
+   Processed_Queue   = xQueueCreate ( 10,sizeof(Line_t  ));
+   Performance_Queue = xQueueCreate ( 10,sizeof(Line_t  ));
    gpioInit(GPIO2,GPIO_OUTPUT);
    gpioInit(GPIO3,GPIO_OUTPUT);
    gpioWrite(GPIO2,OFF);
@@ -52,7 +56,7 @@ void Upper_Task( void* nil )
    while(TRUE) {
       if (xQueueReceive(Upper_Queue,&L,portMAX_DELAY)== pdTRUE){
          gpioWrite(GPIO2,ON);
-         Print_Line   ( &L ); // debug
+//         Print_Line   ( &L ); // debug
          To_Uppercase ( &L );
          xQueueSend(Processed_Queue,&L,portMAX_DELAY);
          gpioWrite(GPIO2,OFF);
@@ -65,24 +69,10 @@ void Lower_Task( void* nil )
    while(TRUE) {
       if( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )== pdTRUE){
          gpioWrite(GPIO3,ON);
-         Print_Line(&L);                  //debug
+//         Print_Line(&L);                  //debug
          To_Lowercase(&L);
          xQueueSend(Processed_Queue,&L,portMAX_DELAY);
          gpioWrite(GPIO3,OFF);
       }
    }
 }
-
-//esta tarea vuela, hay que reempazarla por la encargada de mandar los datos
-//por irq
-void Print_Line_Task( void* nil )
-{
-   Line_t L;
-   while(TRUE) {
-      while (xQueueReceive(Processed_Queue,&L,portMAX_DELAY)==pdFAIL)
-         ;
-      Print_Line(&L);
-      Pool_Put4Line(&L);
-   }
-}
-
