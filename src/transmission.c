@@ -50,6 +50,7 @@ void Transmit_Task ( void* nil )
 			}
 		    Aux_Buf[0] = ETX_VALID; // trailer
      		Dynamic_Data2Uart_Fifo ( Aux_Buf ,1 );  
+        }
 }
 
 // Callback de transmision proactiva de linea con medida de performance
@@ -58,6 +59,3 @@ void completionHandler ( void * Puart_tp )
        tiempo_de_transmision = now();
 }
 
-
-   }
-}

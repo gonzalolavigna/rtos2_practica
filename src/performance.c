@@ -51,7 +51,7 @@ void Performance_Task( void* nil )
    				            L.Token->tiempo_de_salida,
    				            L.Token->tiempo_de_transmision
     				);
-    	  UART_TX_Proact ( (uint8_t *) &S,len,completionHandler);
+    	  UART_TX_Proact ( (uint8_t *) &S,len,completionHandler);  Esto lo tengo que sacar y lo eliminamos todo en el completion handler
     	  Pool_Put4Token(&L);
     	  Pool_Put4Line(&L);
       }

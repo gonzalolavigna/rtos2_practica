@@ -16,7 +16,6 @@
 
 QueueHandle_t Upper_Queue;       //cola para mensajes que seran mayusculizados
 QueueHandle_t Lower_Queue;       //para los que seran pasados a minuscula
-
 QueueHandle_t Performance_Queue; //cola para mensajes a medir performance
 
 void Init_Text_Process(void)

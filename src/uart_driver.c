@@ -2,9 +2,9 @@
 #include "sapi.h"
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
+#include "qmpool.h"
 #include "uart_driver.h"
 #include "line_parser.h"
-#include "qmpool.h"
 #include "pool_array.h"
 
 #define CANTIDAD_ITEMS_COLA_TXPRO 8

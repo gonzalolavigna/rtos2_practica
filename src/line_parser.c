@@ -11,6 +11,9 @@
 #include "pool_array.h"
 #include "performance.h"
 
+static  uint32_t tiempo_de_llegada;
+static  uint32_t tiempo_de_recepcion;
+
 void uartInitParser (void){
    uartCallbackSet ( UART_USB ,UART_RECEIVE ,parserCallback ,NULL );
 }
@@ -102,7 +105,7 @@ void parserCallback( void* nil ) // Callback para la interrupcion.
             xQueueSendFromISR(Performance_Queue,(void *)&L,&xHigherPriorityTaskWoken);
             break;
          default:
-            debugPrintlnString ( "PARSER:OPERACION NO IMPLEMENTADA\r\n" );
+            //debugPrintlnString ( "PARSER:OPERACION NO IMPLEMENTADA\r\n" );
                         // pslavkin aca hay que devolver el pool
             Pool_Put4Line(&L);
             break;
