@@ -8,11 +8,6 @@
 #include "line_parser.h"
 #include "pool_array.h"
 
-extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder
-                           // mandar mensajes de debug desde varios archivos.
-                           // solo poniendo esto como externo y volando static
-                           // en la sapi...
-
 #define MAX_POOL_SIZE    512     //el tamanio de cada pool (todos iguales)
 #define MAX_REQUEST_SIZE 256     //lo maximo que se puede pedir
 #define MIN_BLOCK_SIZE   16      //el pool mas chico de 16, el resto incrementa linealmente
@@ -35,16 +30,21 @@ QMPool* Pool_Select(uint8_t Size)
 {
    return &Mem_Pool[Size/MIN_BLOCK_SIZE];
 }
-bool Pool_Get4Line(Line_t* L)
+void* Pool_Get(uint8_t Size)
 {
-   L->Data=QMPool_get ( Pool_Select ( L->T ),0 );
-   return L->Data!=NULL;
+  return QMPool_get ( Pool_Select ( Size ),0 );
+}
+void Pool_Put(uint8_t Size,uint8_t* Data)
+{
+   QMPool_put ( Pool_Select(Size ),Data );
+}
+void Pool_Get4Line(Line_t* L)
+{
+   L->Data=Pool_Get ( L->T );
 }
 void Pool_Put4Line(Line_t* L)
 {
-   QMPool_put ( Pool4Size(L->T),L->Data );
+   Pool_Put ( L->T,L->Data );
 }
-QMPool* Pool4Size(uint8_t Size)
-{
-   return &Mem_Pool[Size/MIN_BLOCK_SIZE];
-}
+
+

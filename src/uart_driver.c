@@ -1,7 +1,11 @@
+#include <string.h>
 #include "sapi.h"
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "uart_driver.h"
+#include "line_parser.h"
+#include "qmpool.h"
+#include "pool_array.h"
 
 #define CANTIDAD_ITEMS_COLA_TXPRO 8
 
@@ -26,16 +30,28 @@ void Uart_Driver_Init (void){
    uartWriteByte ( UART_USB, '\0'   ); // WAF?? asi lo pide sapi..ver los ejemplos de uart con irq
    circularBufferInit ( cola_tx_proactivas, sizeof(Driver_proactivo ), CANTIDAD_ITEMS_COLA_TXPRO );
 }
-
+void Pool_Put4Driver_Proactivo(Driver_proactivo* D)
+{
+   Pool_Put(D->largo,D->pBuffer);
+}
 void Data2Uart_Fifo(uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback )
 {
-  Driver_proactivo uart_txpro;
-  uart_txpro.pBuffer  = Data;
-  uart_txpro.largo    = Size;
-  uart_txpro.callback = Callback;
-  circularBufferWrite ( &cola_tx_proactivas ,(uint8_t * )&uart_txpro);
+   Driver_proactivo uart_txpro;
+   uart_txpro.pBuffer  = Data;
+   uart_txpro.largo    = Size;
+   uart_txpro.callback = Callback;
+   circularBufferWrite ( &cola_tx_proactivas ,(uint8_t * )&uart_txpro);
+   uartCallbackSet ( UART_USB ,UART_TRANSMITER_FREE ,uartUsbSendCallback ,NULL );
 }
-
+void Dynamic_Data2Uart_Fifo(uint8_t* Data, uint8_t Size)
+{
+   uint8_t* Buf=Pool_Get( Size );
+   memcpy   ( Buf,Data,Size ); // ssisi, copio pero alguien tienen que llenar
+                               // el pool. en el peor caso copio 2 veces, una
+                               // en una local y de la local aca, pero el
+                               // codigo queda mas fresco
+   Data2Uart_Fifo(Buf, Size, (callBackFuncPtr_t )Pool_Put4Driver_Proactivo);
+}
 void uartUsbSendCallback (void * nil)
 {
    BaseType_t xHigherPriorityTaskWoken = pdFALSE;

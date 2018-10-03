@@ -39,7 +39,8 @@ bool Parse_Next_Byte(char B, Line_t* L)
                                  // los tamaños pero como el tamño enviado siempre es 1 mas grande,
                                  // alcanza para poner el \0.
         Data_Index = 0;
-        if(Pool_Get4Line(L))
+        Pool_Get4Line(L);
+        if(L->Data!=NULL)
            Parser_State=DATA_STATE;
         else
            Parser_State=STX_STATE;

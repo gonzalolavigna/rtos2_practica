@@ -16,8 +16,8 @@ int main(void)
    boardConfig (          );
    gpioWrite   ( LED3, ON );
 
-   Uart_Driver_Init  ( );
    Init_Pool_Array   ( ); // define los arreglos de pools para luego usar
+   Uart_Driver_Init  ( );
    Init_Text_Process ( ); // inicializa las colas de frtos que se usaran y alguna otra cosa
    uartInitParser    ( );
    xTaskCreate ( Upper_Task      ,"uppercasing"  ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
