@@ -1,1 +1,5 @@
 Hola
+Pablo Telmo Gonzalo
+abcdABCD
+vamos los pibes!!!
+Implementar los requisitos de a uno y verificar el funcionamiento de los mismos antes de pasar al siguiente
