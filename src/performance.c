@@ -12,6 +12,7 @@
 #include "pool_array.h"
 #include "transmission.h"
 #include "performance.h"
+#include "uart_driver.h"
 
 uint32_t id_de_paquete = 0;
 
@@ -51,7 +52,8 @@ void Performance_Task( void* nil )
    				            L.Token->tiempo_de_salida,
    				            L.Token->tiempo_de_transmision
     				);
-    	  UART_TX_Proact ( (uint8_t *) &S,len,completionHandler);  Esto lo tengo que sacar y lo eliminamos todo en el completion handler
+    	  //UART_TX_Proact ( (uint8_t *) &S,len,completionHandler);  Esto lo tengo que sacar y lo eliminamos todo en el completion handler
+    	  Dynamic_Data2Uart_Fifo ( S ,strlen(S) );
     	  Pool_Put4Token(&L);
     	  Pool_Put4Line(&L);
       }
