@@ -38,12 +38,13 @@ void Transmit_Task ( void* nil )
      //paquete para enviar
      //Se decide M, dado que resalta el modelo de capas, o modelo cebolla,
      //aunque para este caso en particualr sea mas ineficiente
-		    Aux_Buf[0] = STX_VALID; // header
+			tiempo_de_salida = now();
+     	 	Aux_Buf[0] = STX_VALID; // header
      		Aux_Buf[1] = L.Op;      // operacion
      		Aux_Buf[2] = L.T;       // tamanio
      		Dynamic_Data2Uart_Fifo ( Aux_Buf ,3 );	
 		    if(L.Token == NULL){
-				Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )Pool_Put4Driver_Proactivo );
+		    	Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )Pool_Put4Driver_Proactivo );
 			}
 			else {
 				Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )completionHandler );			
