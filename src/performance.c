@@ -13,8 +13,6 @@
 #include "transmission.h"
 #include "performance.h"
 
-extern DEBUG_PRINT_ENABLE;
-
 uint32_t id_de_paquete = 0;
 
 void Performance_Task( void* nil )

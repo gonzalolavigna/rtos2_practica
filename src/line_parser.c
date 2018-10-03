@@ -11,24 +11,8 @@
 #include "pool_array.h"
 #include "performance.h"
 
-extern DEBUG_PRINT_ENABLE; // no encontre otra manera de poder mandar mensajes de debug desde varios
-                           // archivos.  solo poniendo esto como externo y volando static en la sapi...
-
-static  uint32_t tiempo_de_llegada;
-static  uint32_t tiempo_de_recepcion;
-
-bool_t uartInitParser (void){
-   uartConfig                 ( UART_USB,115200            );
-   uartRxInterruptCallbackSet ( UART_USB, parserCallback   );
-   uartRxInterruptSet         ( UART_USB, TRUE             );
-   debugPrintlnString         ( "PARSER:UART INICIALIZADA" );
-   //TODO: Pensar en el Init que pasa si no esta habilitado el scheduler y hay
-   //una IRQ. Amerita un testing? o un esquema mas inteligente?
-   gpioInit  ( GPIO0,GPIO_OUTPUT ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
-   gpioWrite ( GPIO0,OFF         );
-   gpioInit  ( GPIO1,GPIO_OUTPUT ); // GLAVIGNA:Agregado para medir tiempos de atencion de la interrupcion.
-   gpioWrite ( GPIO1,OFF         );
-   return TRUE;
+void uartInitParser (void){
+   uartCallbackSet ( UART_USB ,UART_RECEIVE ,parserCallback ,NULL );
 }
 
 bool Parse_Next_Byte(char B, Line_t* L)
@@ -37,7 +21,6 @@ bool Parse_Next_Byte(char B, Line_t* L)
    static Parser_t   Parser_State = STX_STATE;
    static uint8_t    Data_Index;
 
-   gpioWrite(GPIO1,ON);
    switch (Parser_State) {
       case STX_STATE:
     	    tiempo_de_llegada = now();
@@ -55,20 +38,21 @@ bool Parse_Next_Byte(char B, Line_t* L)
                Parser_State=STX_STATE;
             break;
       case T_STATE:
-    	L->T       = B ;// TODO:Test con tamaños con numero entero de pool.Habria que verificar
-                        // los tamaños pero como el tamño enviado siempre es 1 mas grande,
-                        // alcanza para poner el \0.
+        L->T       = B;          // TODO:Test con tamaños con numero entero de pool.Habria que verificar
+                                 // los tamaños pero como el tamño enviado siempre es 1 mas grande,
+                                 // alcanza para poner el \0.
         Data_Index = 0;
-        if(Pool_Get4Line(L))
+        Pool_Get4Line(L);
+        if(L->Data!=NULL)
            Parser_State=DATA_STATE;
         else
            Parser_State=STX_STATE;
         break;
       case DATA_STATE:
         L->Data[Data_Index++]=B;
-        if(Data_Index>= L->T) {
-            L->Data[Data_Index] = '\0';
-            Parser_State               = ETX_STATE;
+        if(Data_Index>=L->T) {
+           L->Data[Data_Index] = '\0';
+           Parser_State        = ETX_STATE;
         }
         break;
       case ETX_STATE:
@@ -88,37 +72,17 @@ bool Parse_Next_Byte(char B, Line_t* L)
         Parser_State=STX_STATE;
         break;
    }
-   gpioWrite(GPIO1,OFF);
    return Ans;
 }
 //--------------------------------------------------------------------------------
-//funcion para imprimir la line, para debug.. despues volar
-void Print_Line(Line_t* L)
-{
-   char S[100];
-   sprintf( S, "Line: |0x%X|0x%X|%s|\r\n",
-               L->Op,
-               L->T,
-               L->Data);
-   debugPrintlnString(S);
-}
-
-//Callback para la interrupcion.
-void parserCallback( void* nil )
+void parserCallback( void* nil ) // Callback para la interrupcion.
 {
    static Line_t L;
-   static uint8_t byteReceived;
    static BaseType_t xHigherPriorityTaskWoken= pdFALSE;
 
-                         // Tiempo medido con Analizador logico atencion de la
-                         // interrucion de 3 us.  Para mandar a la cola le
-                         // lleva 6 us.
-   gpioWrite (GPIO0,ON); // GLAVIGNA: Para medir tiempo de atencion ISR, lo
-                         // mido con Analizador Logico
-
    while(uartRxReady(UART_USB)) {
-      byteReceived = uartRxRead(UART_USB);
-      if(Parse_Next_Byte(byteReceived, &L)) {
+      gpioToggle   ( LEDR );
+      if(Parse_Next_Byte(uartRxRead(UART_USB), &L))
          switch(L.Op) { // Agrego un switch case por si hay mas opciones y
                         // acciones que realizar
          case OP_TO_MAY:
@@ -143,10 +107,7 @@ void parserCallback( void* nil )
             Pool_Put4Line(&L);
             break;
          }
-      }
    }
-   gpioWrite (GPIO0,OFF); //GLAVIGNA: Para medir tiempo de atencion ISR, lo
-                          //mido con Analizador Logico
    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 //--------------------------------------------------------------------------------
