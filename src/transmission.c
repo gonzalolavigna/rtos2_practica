@@ -21,7 +21,7 @@ void Pool_Put4Uart_Tx_t(Driver_proactivo* D)
 void Transmit_Task ( void* nil )
 {
    Line_t L;
-   uint8_t Aux_Buf[2];
+   uint8_t Aux_Buf[5];
    Processed_Queue = xQueueCreate ( 10,sizeof(Line_t ));
 
    while (TRUE) {
@@ -33,12 +33,12 @@ void Transmit_Task ( void* nil )
 
      Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )Pool_Put4Uart_Tx_t );
 
-     Aux_Buf[0] = ETX_VALID; // trailer
+     Aux_Buf[2] = ETX_VALID; // trailer
      Data2Uart_Fifo ( Aux_Buf ,1   ,NULL );
 
      //debug para generar un corte de linea por cada trama
-     Aux_Buf[0] = '\r';
-     Aux_Buf[1] = '\n';
+     Aux_Buf[3] = '\r';
+     Aux_Buf[4] = '\n';
      Data2Uart_Fifo ( Aux_Buf ,2   ,NULL );
      uartCallbackSet ( UART_USB ,UART_TRANSMITER_FREE ,uartUsbSendCallback ,NULL );
    }
