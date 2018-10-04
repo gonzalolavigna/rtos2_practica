@@ -19,6 +19,7 @@ uint32_t id_de_paquete = 0;
 void Performance_Task( void* nil )
 {
    Line_t L;
+   Line_t L_metricas;
    while(TRUE) {
       if (xQueueReceive(Performance_Queue,&L,portMAX_DELAY)== pdTRUE){
    	      L.Token->tiempo_de_inicio = now();
@@ -30,10 +31,17 @@ void Performance_Task( void* nil )
    		   ;
    	      L.Token->tiempo_de_salida = tiempo_de_salida;
    	      L.Token->tiempo_de_transmision = tiempo_de_transmision;
-    	  char S[300];
-    	  uint8_t len;
-    	  len = sprintf( S, "\r"
-    			            "ID de paquete:         %d\r"
+
+   	      //Armo un paquete que reconoza el transmisor este va a tener la data util
+   	      L_metricas.Op = OP_PERFORMANCE;
+   	      L_metricas.Token = NULL;
+   	      L_metricas.T = 255;
+   	      Pool_Get4Line(&L_metricas);
+
+   	      uint8_t len;
+   	      ///BUG: Cuando me paso de 100000 ticks colapsa el largo es mas que 255.
+    	  len = sprintf( L_metricas.Data, "\r"
+    			            "ID de paquete:%d\r"
     			            "Largo de paquete:      %d\r"
     			            "Memoria alojada:       %d\r"
     			            "Tiempo de llegada:     %d\r"
@@ -52,8 +60,8 @@ void Performance_Task( void* nil )
    				            L.Token->tiempo_de_salida,
    				            L.Token->tiempo_de_transmision
     				);
-    	  //UART_TX_Proact ( (uint8_t *) &S,len,completionHandler);  Esto lo tengo que sacar y lo eliminamos todo en el completion handler
-    	  Dynamic_Data2Uart_Fifo ( S ,len);
+    	  L_metricas.T = len;
+          xQueueSend(Processed_Queue,&L_metricas,portMAX_DELAY);
     	  Pool_Put4Token(&L);
     	  Pool_Put4Line(&L);
       }
