@@ -13,17 +13,15 @@
 #include "transmission.h"
 #include "performance.h"
 
-
 QueueHandle_t Upper_Queue;       //cola para mensajes que seran mayusculizados
 QueueHandle_t Lower_Queue;       //para los que seran pasados a minuscula
 QueueHandle_t Performance_Queue; //cola para mensajes a medir performance
 
 void Init_Text_Process(void)
 {
-   //TODO: definir el largo apropiado.. por ahora 10
-   Upper_Queue     = xQueueCreate ( 10,sizeof(Line_t ));
-   Lower_Queue     = xQueueCreate ( 10,sizeof(Line_t ));
-   Performance_Queue = xQueueCreate ( 10,sizeof(Line_t  ));
+   Upper_Queue       = xQueueCreate ( 10,sizeof(Line_t ));
+   Lower_Queue       = xQueueCreate ( 10,sizeof(Line_t ));
+   Performance_Queue = xQueueCreate ( 10,sizeof(Line_t ));
 }
 
 Line_t* To_Uppercase(Line_t* L)
@@ -44,20 +42,20 @@ void Upper_Task( void* nil )
 {
    Line_t L;
    while(TRUE) {
-      if (xQueueReceive(Upper_Queue,&L,portMAX_DELAY)== pdTRUE){
-         To_Uppercase ( &L );
-         xQueueSend(Processed_Queue,&L,portMAX_DELAY);
-      }
+      while(xQueueReceive(Upper_Queue,&L,portMAX_DELAY)== pdFALSE)
+         ;
+      To_Uppercase ( &L                               );
+      xQueueSend   ( Processed_Queue,&L,portMAX_DELAY );
    }
 }
 void Lower_Task( void* nil )
 {
    Line_t L;
    while(TRUE) {
-      if( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )== pdTRUE){
-         To_Lowercase(&L);
-         xQueueSend(Processed_Queue,&L,portMAX_DELAY);
-      }
+      while( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )== pdFALSE)
+         ;
+      To_Lowercase ( &L                               );
+      xQueueSend   ( Processed_Queue,&L,portMAX_DELAY );
    }
 }
 
