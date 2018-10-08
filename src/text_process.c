@@ -3,6 +3,7 @@
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "semphr.h"
 #include "task.h"
 #include "sapi.h"
 
@@ -15,13 +16,11 @@
 
 QueueHandle_t upperQueue;       //cola para mensajes que seran mayusculizados
 QueueHandle_t lowerQueue;       //para los que seran pasados a minuscula
-QueueHandle_t performanceQueue; //cola para mensajes a medir performance
 
 void initTextProcess(void)
 {
    upperQueue       = xQueueCreate ( 10,sizeof(line_t ));
    lowerQueue       = xQueueCreate ( 10,sizeof(line_t ));
-   performanceQueue = xQueueCreate ( 10,sizeof(line_t ));
 }
 
 line_t* toUppercase(line_t* l)

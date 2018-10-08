@@ -4,6 +4,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#include "semphr.h"
 #include "sapi.h"
 
 #include "qmpool.h"
@@ -14,7 +15,16 @@
 #include "performance.h"
 #include "uart_driver.h"
 
+QueueHandle_t     performanceQueue; //cola para mensajes a medir performance
+SemaphoreHandle_t waitingEndT;
+
 uint32_t id = 0;
+
+void initPerformance(void)
+{
+   performanceQueue = xQueueCreate           ( 10,sizeof(line_t ));
+   waitingEndT      = xSemaphoreCreateBinary (                  ) ;
+}
 
 void performanceTask( void* nil )
 {
@@ -28,8 +38,10 @@ void performanceTask( void* nil )
       l.token->proccessEndT = now();
       transmissionEndT      = 0;
       xQueueSend(processedQueue ,&l ,portMAX_DELAY);
-      while (transmissionEndT == 0)  //TODO: Usar un semaforo y mutex
+
+      while(xSemaphoreTake( waitingEndT, portMAX_DELAY)==pdFALSE)
          ;
+
       l.token->transmissionBeginT = transmissionBeginT;
       l.token->transmissionEndT   = transmissionEndT;
 

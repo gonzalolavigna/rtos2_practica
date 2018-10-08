@@ -2,6 +2,7 @@
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "sapi.h"
 
 #include "qmpool.h"

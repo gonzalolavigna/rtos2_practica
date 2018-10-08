@@ -2,6 +2,7 @@
 #include "sapi.h"
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "qmpool.h"
 #include "uart_driver.h"
 #include "line_parser.h"
@@ -59,10 +60,10 @@ void uartUsbSendCallback (void * nil)
       case INIT:
          i           = 0;
          remainSize  = 0;
-         bufferState = circularBufferRead( &proactiveTxBuffer, (uint8_t *) &txPro);
-         if( bufferState != CIRCULAR_BUFFER_EMPTY && txPro.size>0) {
-            remainSize = txPro.size;
-            State      = CONTI;
+            bufferState = circularBufferRead( &proactiveTxBuffer, (uint8_t *) &txPro);
+            if( bufferState != CIRCULAR_BUFFER_EMPTY && txPro.size>0) {
+               remainSize = txPro.size;
+               State      = CONTI;
          }
          else
             uartCallbackClr( UART_USB,UART_TRANSMITER_FREE ); // no hay que hacer nada.. me avisa que ya salio el dato

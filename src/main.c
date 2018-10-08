@@ -1,6 +1,7 @@
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "semphr.h"
 #include "task.h"
 #include "sapi.h"
 
@@ -21,6 +22,7 @@ int main(void)
    initPoolArray   ( ); // define los arreglos de pools para luego usar
    initUartDriver  ( );
    initTextProcess ( ); // inicializa las colas de frtos que se usaran y alguna otra cosa
+   initPerformance ( ); // cola de performance
    uartInitParser  ( );
    xTaskCreate ( upperTask       ,"uppercasing" ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
    xTaskCreate ( lowerTask       ,"lowercasing" ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );

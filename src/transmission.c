@@ -2,6 +2,7 @@
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "semphr.h"
 #include "task.h"
 #include "sapi.h"
 
@@ -45,6 +46,7 @@ void transmitTask ( void* nil )
 // Callback de transmision proactiva de linea con medida de performance
 void completionHandler ( void * Puart_tp )
 {
-       transmissionEndT = now();
+      xSemaphoreGiveFromISR( waitingEndT, NULL);
+      transmissionEndT = now();
 }
 
