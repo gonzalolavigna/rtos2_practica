@@ -12,47 +12,47 @@
 #define MAX_REQUEST_SIZE 256     //lo maximo que se puede pedir
 #define MIN_BLOCK_SIZE   16      //el pool mas chico de 16, el resto incrementa linealmente
 
-char Mem_Pool_Sto[ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE][MAX_POOL_SIZE];
-QMPool Mem_Pool  [ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE];
+char memPoolSto[ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE][MAX_POOL_SIZE];
+QMPool memPool [ MAX_REQUEST_SIZE/MIN_BLOCK_SIZE];
 
-void Init_Pool_Array(void)
+void initPoolArray(void)
 {
    uint8_t i;
-   for(i=0;i<sizeof(Mem_Pool)/sizeof(Mem_Pool[0]);i++)
-      QMPool_init(&Mem_Pool           [ i ],
-                   Mem_Pool_Sto       [ i ],
-                   sizeof(Mem_Pool_Sto[ 0 ]),
-                   MIN_BLOCK_SIZE* ( i+1 ));
+   for(i=0;i<sizeof(memPool)/sizeof(memPool[0]);i++)
+      QMPool_init(&memPool          [ i ],
+                   memPoolSto       [ i ],
+                   sizeof(memPoolSto[ 0 ]),
+                   MIN_BLOCK_SIZE*( i+1 ));
 }
 //para no hacer la asignacino usando if/else, defino una asignacino lineal dividiendo 
 //e indexando un vector de pools de diferentes tamanios, pero se puede cambiar a otro modelo 
-QMPool* Pool_Select(uint8_t Size)
+QMPool* poolSelect(uint8_t size)
 {
-   return &Mem_Pool[Size/MIN_BLOCK_SIZE];
+   return &memPool[size/MIN_BLOCK_SIZE];
 }
-void* Pool_Get(uint8_t Size)
+void* poolGet(uint8_t size)
 {
-  return QMPool_get ( Pool_Select ( Size ),0 );
+  return QMPool_get ( poolSelect ( size ),0 );
 }
-void Pool_Put(uint8_t Size,uint8_t* Data)
+void poolPut(uint8_t size,uint8_t* data)
 {
-   QMPool_put ( Pool_Select(Size ),Data );
+   QMPool_put ( poolSelect(size ),data );
 }
-void Pool_Get4Line(Line_t* L)
+void poolGet4Line(line_t* l)
 {
-   L->Data=Pool_Get ( L->T );
+   l->data=poolGet ( l->len );
 }
-void Pool_Put4Line(Line_t* L)
+void poolPut4Line(line_t* l)
 {
-   Pool_Put ( L->T,L->Data );
+   poolPut ( l->len,l->data );
 }
 
-bool Pool_Get4Token(Line_t* L)
+bool poolGet4Token(line_t* l)
 {
-   L->Token=QMPool_get  ( Pool_Select(sizeof(Token_t)),0 );
-   return L->Token!=NULL;
+   l->token=QMPool_get  ( poolSelect(sizeof(token_t)),0 );
+   return l->token!=NULL;
 }
-void Pool_Put4Token(Line_t* L)
+void poolPut4Token(line_t* l)
 {
-   QMPool_put ( Pool_Select(sizeof(Token_t)),L->Token );
+   QMPool_put ( poolSelect(sizeof(token_t)),l->token );
 }

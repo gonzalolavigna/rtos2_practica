@@ -13,49 +13,49 @@
 #include "transmission.h"
 #include "performance.h"
 
-QueueHandle_t Upper_Queue;       //cola para mensajes que seran mayusculizados
-QueueHandle_t Lower_Queue;       //para los que seran pasados a minuscula
-QueueHandle_t Performance_Queue; //cola para mensajes a medir performance
+QueueHandle_t upperQueue;       //cola para mensajes que seran mayusculizados
+QueueHandle_t lowerQueue;       //para los que seran pasados a minuscula
+QueueHandle_t performanceQueue; //cola para mensajes a medir performance
 
-void Init_Text_Process(void)
+void initTextProcess(void)
 {
-   Upper_Queue       = xQueueCreate ( 10,sizeof(Line_t ));
-   Lower_Queue       = xQueueCreate ( 10,sizeof(Line_t ));
-   Performance_Queue = xQueueCreate ( 10,sizeof(Line_t ));
+   upperQueue       = xQueueCreate ( 10,sizeof(line_t ));
+   lowerQueue       = xQueueCreate ( 10,sizeof(line_t ));
+   performanceQueue = xQueueCreate ( 10,sizeof(line_t ));
 }
 
-Line_t* To_Uppercase(Line_t* L)
+line_t* toUppercase(line_t* l)
 {
    uint8_t i;
-   for(i=0;i<L->T;i++)
-      L->Data[i]=toupper(L->Data[i]);     //aprovechando libc
-  return L;
+   for(i=0;i<l->len;i++)
+      l->data[i]=toupper(l->data[i]);     //aprovechando libc
+  return l;
 }
-Line_t* To_Lowercase(Line_t* L)
+line_t* toLowercase(line_t* l)
 {
    uint8_t i;
-   for(i=0;i<L->T;i++)
-      L->Data[i]=tolower(L->Data[i]);     //aprovechando a libc
-  return L;
+   for(i=0;i<l->len;i++)
+      l->data[i]=tolower(l->data[i]);     //aprovechando a libc
+  return l;
 }
-void Upper_Task( void* nil )
+void upperTask( void* nil )
 {
-   Line_t L;
+   line_t l;
    while(TRUE) {
-      while(xQueueReceive(Upper_Queue,&L,portMAX_DELAY)== pdFALSE)
+      while(xQueueReceive(upperQueue,&l,portMAX_DELAY)== pdFALSE)
          ;
-      To_Uppercase ( &L                               );
-      xQueueSend   ( Processed_Queue,&L,portMAX_DELAY );
+      toUppercase ( &l                              );
+      xQueueSend  ( processedQueue,&l,portMAX_DELAY );
    }
 }
-void Lower_Task( void* nil )
+void lowerTask( void* nil )
 {
-   Line_t L;
+   line_t l;
    while(TRUE) {
-      while( xQueueReceive(Lower_Queue,&L,portMAX_DELAY )== pdFALSE)
+      while( xQueueReceive(lowerQueue,&l,portMAX_DELAY )== pdFALSE)
          ;
-      To_Lowercase ( &L                               );
-      xQueueSend   ( Processed_Queue,&L,portMAX_DELAY );
+      toLowercase ( &l                              );
+      xQueueSend  ( processedQueue,&l,portMAX_DELAY );
    }
 }
 

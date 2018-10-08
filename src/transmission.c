@@ -13,38 +13,38 @@
 #include "uart_driver.h"
 #include "performance.h"
 
-QueueHandle_t     Processed_Queue;   //una vez procesada la linea, viene a esta cola
-volatile uint32_t tiempo_de_salida;
-volatile uint32_t tiempo_de_transmision;
+QueueHandle_t     processedQueue;   //una vez procesada la linea, viene a esta cola
+volatile uint32_t transmissionBeginT;
+volatile uint32_t transmissionEndT;
 
-void Transmit_Task ( void* nil )
+void transmitTask ( void* nil )
 {
-   Line_t L;
-   uint8_t Aux_Buf[10];    //auziliar para armar la trama, con 3 alcanza
-   Processed_Queue = xQueueCreate ( 10,sizeof(Line_t ));
+   line_t l;
+   uint8_t auxBuf[10];    //auziliar para armar la trama, con 3 alcanza
+   processedQueue = xQueueCreate ( 10,sizeof(line_t ));
 
    while (TRUE) {
-     while(xQueueReceive ( Processed_Queue, &L, portMAX_DELAY )==pdFALSE)
+     while(xQueueReceive ( processedQueue, &l, portMAX_DELAY )==pdFALSE)
         ;
-     Aux_Buf[0]       = STX_VALID; // header
-     Aux_Buf[1]       = L.Op;      // operacion
-     Aux_Buf[2]       = L.T;       // tamanio
-     tiempo_de_salida = now();
-     Dynamic_Data2Uart_Fifo ( Aux_Buf ,3 );
-     if(L.Token == NULL){
-        Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )Pool_Put4Driver_Proactivo );
+     auxBuf[0]          = STX_VALID; // header
+     auxBuf[1]          = l.op;      // operacion
+     auxBuf[2]          = l.len;     // tamanio
+     transmissionBeginT = now();
+     dynamicData2UartFifo ( auxBuf ,3 );
+     if(l.token == NULL){
+        data2UartFifo ( l.data ,l.len ,(callBackFuncPtr_t )poolPut4DriverProactivo );
      }
      else {
-        Data2Uart_Fifo ( L.Data  ,L.T ,(callBackFuncPtr_t )completionHandler );
+        data2UartFifo ( l.data ,l.len ,(callBackFuncPtr_t )completionHandler );
      }
-     Aux_Buf[0] = ETX_VALID;       // trailer
-     Dynamic_Data2Uart_Fifo ( Aux_Buf ,1 );
+     auxBuf[0] = ETX_VALID;       // trailer
+     dynamicData2UartFifo ( auxBuf ,1 );
    }
 }
 
 // Callback de transmision proactiva de linea con medida de performance
 void completionHandler ( void * Puart_tp )
 {
-       tiempo_de_transmision = now();
+       transmissionEndT = now();
 }
 

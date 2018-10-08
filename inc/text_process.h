@@ -1,14 +1,14 @@
 #ifndef TEXT_PROCESS
 #define TEXT_PROCESS
 
-extern QueueHandle_t Upper_Queue;
-extern QueueHandle_t Lower_Queue;
-extern QueueHandle_t Performance_Queue;
+extern QueueHandle_t upperQueue;
+extern QueueHandle_t lowerQueue;
+extern QueueHandle_t performanceQueue;
 
-void    Init_Text_Process   ( void      );
-void    Upper_Task          ( void* nil );
-void    Lower_Task          ( void* nil );
-Line_t* To_Uppercase        (Line_t* L);
-Line_t* To_Lowercase        (Line_t* L);
+void    initTextProcess   ( void      );
+void    upperTask          ( void* nil );
+void    lowerTask          ( void* nil );
+line_t* toUppercase        (line_t* l);
+line_t* toLowercase        (line_t* l);
 
 #endif

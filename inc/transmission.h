@@ -1,12 +1,12 @@
 #ifndef TRANSMISSION
 #define TRANSMISSION
 
-extern volatile uint32_t                   tiempo_de_salida;
-extern volatile uint32_t                   tiempo_de_transmision;
-extern          QueueHandle_t              Processed_Queue;
+volatile uint32_t       transmissionBeginT;
+volatile uint32_t       transmissionEndT;
+QueueHandle_t           processedQueue;
 
-void            Transmit_Task             ( void* nil );
-void            Transmit_Performance_Task ( void* nil );
-void            completionHandler         ( void* nil );
+void            transmitTask             ( void* nil );
+void            Transmit_performanceTask ( void* nil );
+void            completionHandler        ( void* nil );
 
 #endif

@@ -5,12 +5,12 @@
 #define MAX_REQUEST_SIZE 256     //lo maximo que se puede pedir
 #define MIN_BLOCK_SIZE   16      //el pool mas chico de 16, el resto incrementa linealmente
 
-void        Init_Pool_Array ( void                       );
-QMPool*     Pool_Select     ( uint8_t Size               );
-void*       Pool_Get        ( uint8_t Size               );
-void        Pool_Put        ( uint8_t Size,uint8_t* Data );
-void        Pool_Get4Line   ( Line_t* L                  );
-void        Pool_Put4Line   ( Line_t* L                  );
-bool 		Pool_Get4Token ( Line_t* L    );
-void 		Pool_Put4Token ( Line_t* L    );
+void     initPoolArray ( void                       );
+QMPool*  poolSelect    ( uint8_t size               );
+void*    poolGet       ( uint8_t size               );
+void     poolPut       ( uint8_t size,uint8_t* data );
+void     poolGet4Line  ( line_t* l                  );
+void     poolPut4Line  ( line_t* l                  );
+bool     poolGet4Token ( line_t* l                  );
+void     poolPut4Token ( line_t* l                  );
 #endif

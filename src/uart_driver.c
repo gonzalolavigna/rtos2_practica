@@ -7,62 +7,62 @@
 #include "line_parser.h"
 #include "pool_array.h"
 
-#define CANTIDAD_ITEMS_COLA_TXPRO 8
+#define TXPRO_ITEMS 8
 
 typedef enum {
    INIT = 0,
    CONTI,
 } TX_ISR_STATE;
 
-circularBufferNew ( cola_tx_proactivas ,
-                    sizeof(Driver_proactivo ),
-                    CANTIDAD_ITEMS_COLA_TXPRO );
+circularBufferNew ( proactiveTxBuffer ,
+                    sizeof(proactiveDriver_t ),
+                    TXPRO_ITEMS );
 
-Driver_proactivo        txpro;
-uint32_t                faltan_transmitir;
+proactiveDriver_t       txPro;
+uint32_t                remainSize;
 uint32_t                i;
 TX_ISR_STATE            State       = INIT;
-circularBufferStatus_t  estado_cola;
+circularBufferStatus_t  bufferState;
 
-void Uart_Driver_Init (void){
+void initUartDriver (void){
    uartConfig    ( UART_USB ,115200 );
    uartInterrupt ( UART_USB ,true   );
    uartWriteByte ( UART_USB, '\0'   ); // WAF?? asi lo pide sapi..ver los ejemplos de uart con irq
-   circularBufferInit ( cola_tx_proactivas, sizeof(Driver_proactivo ), CANTIDAD_ITEMS_COLA_TXPRO );
+   circularBufferInit ( proactiveTxBuffer, sizeof(proactiveDriver_t ), TXPRO_ITEMS );
 }
-void Pool_Put4Driver_Proactivo(Driver_proactivo* D)
+void poolPut4DriverProactivo(proactiveDriver_t* D)
 {
-   Pool_Put(D->largo,D->pBuffer);
+   poolPut(D->size,D->pBuffer);
 }
-void Data2Uart_Fifo(uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback )
+void data2UartFifo(uint8_t* data, uint8_t size,callBackFuncPtr_t Callback )
 {
-   Driver_proactivo uart_txpro;
-   uart_txpro.pBuffer  = Data;
-   uart_txpro.largo    = Size;
+   proactiveDriver_t uart_txpro;
+   uart_txpro.pBuffer  = data;
+   uart_txpro.size     = size;
    uart_txpro.callback = Callback;
-   circularBufferWrite ( &cola_tx_proactivas ,(uint8_t * )&uart_txpro);
+   circularBufferWrite ( &proactiveTxBuffer ,(uint8_t * )&uart_txpro);
    uartCallbackSet ( UART_USB ,UART_TRANSMITER_FREE ,uartUsbSendCallback ,NULL );
 }
-void Dynamic_Data2Uart_Fifo(uint8_t* Data, uint8_t Size)
+void dynamicData2UartFifo(uint8_t* data, uint8_t size)
 {
-   uint8_t* Buf=Pool_Get( Size );
-   memcpy   ( Buf,Data,Size ); // ssisi, copio pero alguien tienen que llenar
+   uint8_t* Buf=poolGet( size );
+   memcpy   ( Buf,data,size ); // ssisi, copio pero alguien tienen que llenar
                                // el pool. en el peor caso copio 2 veces, una
                                // en una local y de la local aca, pero el
                                // codigo queda mas fresco
-   Data2Uart_Fifo(Buf, Size, (callBackFuncPtr_t )Pool_Put4Driver_Proactivo);
+   data2UartFifo(Buf, size, (callBackFuncPtr_t )poolPut4DriverProactivo);
 }
 void uartUsbSendCallback (void * nil)
 {
    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
    switch(State) {
       case INIT:
-         i                 = 0;
-         faltan_transmitir = 0;
-         estado_cola       = circularBufferRead( &cola_tx_proactivas, (uint8_t *) &txpro);
-         if( estado_cola != CIRCULAR_BUFFER_EMPTY && txpro.largo>0) {
-            faltan_transmitir = txpro.largo;
-            State             = CONTI;
+         i           = 0;
+         remainSize  = 0;
+         bufferState = circularBufferRead( &proactiveTxBuffer, (uint8_t *) &txPro);
+         if( bufferState != CIRCULAR_BUFFER_EMPTY && txPro.size>0) {
+            remainSize = txPro.size;
+            State      = CONTI;
          }
          else
             uartCallbackClr( UART_USB,UART_TRANSMITER_FREE ); // no hay que hacer nada.. me avisa que ya salio el dato
@@ -70,10 +70,10 @@ void uartUsbSendCallback (void * nil)
       case CONTI:
             while(uartTxReady(UART_USB)) {
                gpioToggle ( LEDB );
-               uartTxWrite (UART_USB, txpro.pBuffer[i++]);
-               if (--faltan_transmitir==0) {
-                  if(txpro.callback!=NULL)
-                     txpro.callback(&txpro);          // Llamo al Callback apenas // despacho el ultimo dato
+               uartTxWrite (UART_USB, txPro.pBuffer[i++]);
+               if (--remainSize==0) {
+                  if(txPro.callback!=NULL)
+                     txPro.callback(&txPro);          // Llamo al Callback apenas // despacho el ultimo dato
                   State=INIT;
                   break;
                }

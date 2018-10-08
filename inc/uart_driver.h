@@ -1,19 +1,19 @@
 #ifndef UART_DRIVER
 #define UART_DRIVER
 
-typedef struct Driver_proactivo_st {
+typedef struct {
    uint8_t *         pBuffer ;
-   uint32_t          largo   ;
+   uint32_t          size   ;
    callBackFuncPtr_t callback;
-} Driver_proactivo;
+} proactiveDriver_t;
 
-circularBuffer_t cola_tx_proactivas;
+circularBuffer_t proactiveTxBuffer;
 
 
-void     Pool_Put4Driver_Proactivo ( Driver_proactivo* D                                    );
-void     Uart_Driver_Init          ( void                                                   );
-void     Data2Uart_Fifo            ( uint8_t* Data, uint8_t Size,callBackFuncPtr_t Callback );
-void     uartUsbSendCallback       (                                                        );
-void     Dynamic_Data2Uart_Fifo    ( uint8_t* Data, uint8_t Size                            );
+void     poolPut4DriverProactivo ( proactiveDriver_t* D                                   );
+void     initUartDriver          ( void                                                   );
+void     data2UartFifo           ( uint8_t* data, uint8_t size,callBackFuncPtr_t Callback );
+void     uartUsbSendCallback     (                                                        );
+void     dynamicData2UartFifo    ( uint8_t* data, uint8_t size                            );
 
 #endif

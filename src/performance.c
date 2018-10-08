@@ -14,34 +14,34 @@
 #include "performance.h"
 #include "uart_driver.h"
 
-uint32_t id_de_paquete = 0;
+uint32_t id = 0;
 
-void Performance_Task( void* nil )
+void performanceTask( void* nil )
 {
-   Line_t L;
-   Line_t L_metricas;
+   line_t l;
+   line_t lPerformance;
    while(TRUE) {
-      while(xQueueReceive(Performance_Queue,&L,portMAX_DELAY)== pdFALSE)
+      while(xQueueReceive(performanceQueue,&l,portMAX_DELAY)== pdFALSE)
          ;
-      L.Token->tiempo_de_inicio = now();
-      To_Uppercase ( &L );
-      L.Token->tiempo_de_fin    = now();
-      tiempo_de_transmision     = 0;
-      xQueueSend(Processed_Queue ,&L ,portMAX_DELAY);
-      while (tiempo_de_transmision == 0)  //TODO: Usar un semaforo y mutex
+      l.token->proccessBeginT = now();
+      toUppercase ( &l );
+      l.token->proccessEndT = now();
+      transmissionEndT      = 0;
+      xQueueSend(processedQueue ,&l ,portMAX_DELAY);
+      while (transmissionEndT == 0)  //TODO: Usar un semaforo y mutex
          ;
-      L.Token->tiempo_de_salida      = tiempo_de_salida;
-      L.Token->tiempo_de_transmision = tiempo_de_transmision;
+      l.token->transmissionBeginT = transmissionBeginT;
+      l.token->transmissionEndT   = transmissionEndT;
 
       //Armo un paquete que reconoza el transmisor este va a tener la data util
-      L_metricas.Op    = OP_PERFORMANCE;
-      L_metricas.Token = NULL;
-      L_metricas.T     = 255;
-      Pool_Get4Line(&L_metricas);
+      lPerformance.op    = OP_PERFORMANCE;
+      lPerformance.token = NULL;
+      lPerformance.len   = 255;
+      poolGet4Line(&lPerformance);
 
       uint8_t len;
-      ///BUG: Cuando me paso de 100000 ticks colapsa el largo es mas que 255.
-      len = sprintf( L_metricas.Data, "\r\n"
+      ///BUG: Cuando me paso de 100000 ticks colapsa el size es mas que 255.
+      len = sprintf( lPerformance.data, "\r\n"
             "ID de paquete:%d\r\n"
             "Largo de paquete:      %d\r\n"
             "Memoria alojada:       %d\r\n"
@@ -51,20 +51,20 @@ void Performance_Task( void* nil )
             "Tiempo de fin:         %d\r\n"
             "Tiempo de salida:      %d\r\n"
             "Tiempo de transmision: %d\r\n",
-            L.Token->id_de_paquete,
-            L.Token->largo_del_paquete,
-            L.Token->memoria_alojada,
-            L.Token->tiempo_de_llegada,
-            L.Token->tiempo_de_recepcion,
-            L.Token->tiempo_de_inicio,
-            L.Token->tiempo_de_fin,
-            L.Token->tiempo_de_salida,
-            L.Token->tiempo_de_transmision
+            l.token->id,
+            l.token->len,
+            l.token->mem,
+            l.token->lineBeginT,
+            l.token->lineEndT,
+            l.token->proccessBeginT,
+            l.token->proccessEndT,
+            l.token->transmissionBeginT,
+            l.token->transmissionEndT
             );
-      L_metricas.T = len;
-      xQueueSend(Processed_Queue,&L_metricas,portMAX_DELAY);
-      Pool_Put4Token ( &L );
-      Pool_Put4Line  ( &L );
+      lPerformance.len = len;
+      xQueueSend(processedQueue,&lPerformance,portMAX_DELAY);
+      poolPut4Token ( &l );
+      poolPut4Line  ( &l );
    }
 }
 
