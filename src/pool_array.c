@@ -39,6 +39,10 @@ void poolPut(uint8_t size,uint8_t* data)
 {
    QMPool_put ( poolSelect(size ),data );
 }
+uint16_t poolGetUsedMem4Line(line_t* l)
+{
+  return  MIN_BLOCK_SIZE* ( l->len/MIN_BLOCK_SIZE + 1 );
+}
 void poolGet4Line(line_t* l)
 {
    l->data=poolGet ( l->len );
@@ -47,7 +51,6 @@ void poolPut4Line(line_t* l)
 {
    poolPut ( l->len,l->data );
 }
-
 bool poolGet4Token(line_t* l)
 {
    l->token=QMPool_get  ( poolSelect(sizeof(token_t)),0 );

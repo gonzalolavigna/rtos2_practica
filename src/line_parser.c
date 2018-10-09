@@ -28,7 +28,7 @@ bool parseByte(char input, line_t* l)
    switch (parserState) {
       case STX_STATE:
          if(input==STX_VALID) {
-            lineBeginT  = now();
+            lineBeginT  = now4Isr();
             parserState = OP_STATE;
          }
          break;
@@ -51,7 +51,7 @@ bool parseByte(char input, line_t* l)
         break;
       case ETX_STATE:
         if(input==ETX_VALID) {
-           lineEndT = now();
+           lineEndT = now4Isr();
            ans      = true;
         }
         else {
@@ -84,11 +84,10 @@ void parserCallback( void* nil ) // Callback para la interrupcion.
             case OP_PERFORMANCE:
                poolGet4Token(&l);                          // Falta control de error
                l.token->id         = id++;
-               l.token->payload    = l.data;
                l.token->lineBeginT = lineBeginT;
                l.token->lineEndT   = lineEndT;
                l.token->len        = l.len;
-               l.token->mem        = l.len/MIN_BLOCK_SIZE; // TODO: No esta funcionando
+               l.token->mem        = poolGetUsedMem4Line(&l);
                xQueueSendFromISR(performanceQueue ,&l ,&xHigherPriorityTaskWoken);
                break;
             default:

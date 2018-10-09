@@ -8,6 +8,7 @@
 #include "sapi.h"
 
 #include "qmpool.h"
+#include "uart_driver.h"
 #include "line_parser.h"
 #include "text_process.h"
 #include "pool_array.h"
@@ -44,7 +45,7 @@ void upperTask( void* nil )
       while(xQueueReceive(upperQueue,&l,portMAX_DELAY)== pdFALSE)
          ;
       toUppercase ( &l                              );
-      xQueueSend  ( processedQueue,&l,portMAX_DELAY );
+      data2UartFifoPlusHeader(l.data,l.len,l.op,(callBackFuncPtr_t )poolPut4DriverProactivo);
    }
 }
 void lowerTask( void* nil )
@@ -54,7 +55,7 @@ void lowerTask( void* nil )
       while( xQueueReceive(lowerQueue,&l,portMAX_DELAY )== pdFALSE)
          ;
       toLowercase ( &l                              );
-      xQueueSend  ( processedQueue,&l,portMAX_DELAY );
+      data2UartFifoPlusHeader(l.data,l.len,l.op,(callBackFuncPtr_t )poolPut4DriverProactivo);
    }
 }
 

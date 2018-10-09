@@ -20,7 +20,6 @@ enum lineHeadTrailer{
 
 typedef struct {
    uint32_t id                ;
-   uint8_t* payload           ;
    uint32_t lineBeginT        ;
    uint32_t lineEndT          ;
    uint32_t proccessBeginT    ;
