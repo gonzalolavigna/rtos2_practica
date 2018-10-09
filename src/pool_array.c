@@ -55,5 +55,6 @@ bool poolGet4Token(line_t* l)
 }
 void poolPut4Token(line_t* l)
 {
-   QMPool_put ( poolSelect(sizeof(token_t)),l->token );
+   QMPool_put ( poolSelect(sizeof(token_t )) ,l->token );
+   QMPool_put ( poolSelect(l->len         )  ,l->data ) ;
 }

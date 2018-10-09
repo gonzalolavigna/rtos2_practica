@@ -66,21 +66,20 @@ void performanceTask( void* nil )
             l.token->id,
             l.token->len,
             l.token->mem,
-            l.token->lineBeginT,
-            l.token->lineEndT,
-            l.token->proccessBeginT,
-            l.token->proccessEndT,
-            l.token->transmissionBeginT,
-            l.token->transmissionEndT
+            l.token->lineBeginT         - l.token->lineBeginT,
+            l.token->lineEndT           - l.token->lineBeginT,
+            l.token->proccessBeginT     - l.token->lineBeginT,
+            l.token->proccessEndT       - l.token->lineBeginT,
+            l.token->transmissionBeginT - l.token->lineBeginT,
+            l.token->transmissionEndT   - l.token->lineBeginT
             );
-      lPerformance.len = len;
-      xQueueSend(processedQueue,&lPerformance,portMAX_DELAY);
       poolPut4Token ( &l );
-      poolPut4Line  ( &l );
+      xQueueSend(processedQueue,&lPerformance,portMAX_DELAY);
    }
 }
 
 uint32_t now()
 {
-   return (uint32_t) xTaskGetTickCount();
+   return 123;
+//   return (uint32_t) xTaskGetTickCount();
 }

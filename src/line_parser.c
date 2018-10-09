@@ -27,22 +27,21 @@ bool parseByte(char input, line_t* l)
 
    switch (parserState) {
       case STX_STATE:
-         lineBeginT = now();
-         l->token          = NULL;
-         ans               = false;
-         if(input==STX_VALID)
+         if(input==STX_VALID) {
+            lineBeginT  = now();
             parserState = OP_STATE;
+         }
          break;
       case OP_STATE:
          l->op       = input;
-         parserState = input <= OP_PERFORMANCE?T_STATE:STX_STATE;
+         parserState = ( input <= OP_PERFORMANCE )?T_STATE:STX_STATE;
          break;
       case T_STATE:
-        l->len    = input;
-        dataIndex = 0;
-        poolGet4Line(l);
-        parserState=l->data!=NULL?DATA_STATE:STX_STATE;
-        break;
+         l->len    = input;
+         dataIndex = 0;
+         poolGet4Line(l);
+         parserState=l->data!=NULL?DATA_STATE:STX_STATE;
+         break;
       case DATA_STATE:
         l->data[dataIndex++]=input;
         if(dataIndex>=l->len) {
@@ -53,7 +52,7 @@ bool parseByte(char input, line_t* l)
       case ETX_STATE:
         if(input==ETX_VALID) {
            lineEndT = now();
-           ans                 = true;
+           ans      = true;
         }
         else {
            poolPut4Line  ( l );

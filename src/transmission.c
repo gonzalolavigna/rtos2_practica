@@ -47,6 +47,6 @@ void transmitTask ( void* nil )
 void completionHandler ( void * Puart_tp )
 {
       xSemaphoreGiveFromISR( waitingEndT, NULL);
-      transmissionEndT = now();
+//      transmissionEndT = now();
 }
 
