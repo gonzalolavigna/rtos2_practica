@@ -13,11 +13,20 @@
 #include "transmission.h"
 #include "performance.h"
 
+#include "FrameworkEventos.h"
+#include "fe_modulobroadcast.h"
+#include "fe_modulopulsadores.h"
+
+//Manejadores de Modulos
+Modulo_t * moduloBroadcast;
+Modulo_t * moduloPulsadores;
+
+void eventosInit (void);
+
 
 int main(void)
 {
    boardConfig (          );
-   gpioWrite   ( LED3, ON );
 
    initPoolArray   ( ); // define los arreglos de pools para luego usar
    initUartDriver  ( );
@@ -25,6 +34,8 @@ int main(void)
    initPerformance ( ); // cola de performance
 //   initTransmit    ( );
    uartInitParser  ( );
+   eventosInit 	   ( );
+
    xTaskCreate ( upperTask       ,"uppercasing" ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
    xTaskCreate ( lowerTask       ,"lowercasing" ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
 //   xTaskCreate ( transmitTask    ,"proactiveTx" ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+1 ,0 );
@@ -34,4 +45,19 @@ int main(void)
    while( TRUE )
       ;
    return 0;
+}
+
+void eventosInit (void){
+	queEventosBaja = xQueueCreate(15, sizeof(Evento_t));
+	xTaskCreate(
+			taskDespacharEventos,					//Funcion de la tarea a ejecutar
+			(const char *) "Despachador Eventos",   //Nombre de la tarea como String
+			configMINIMAL_STACK_SIZE*3,				//Cantidad de stack de la tarea
+			(void*) queEventosBaja,					//Parametros de la tarea
+			tskIDLE_PRIORITY+1,						//Prioridad de la tarea
+			NULL									//Puntero a la tarea creada en el sistema
+			);
+	moduloBroadcast = RegistrarModulo(manejadorEventosBroadcast,PRIORIDAD_BAJA);
+	moduloPulsadores = RegistrarModulo(manejadorEventosPulsadores,PRIORIDAD_BAJA);
+	IniciarTodosLosModulos();
 }

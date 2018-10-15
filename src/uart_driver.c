@@ -57,7 +57,6 @@ void uartUsbSendCallback (void * nil)
          break;
       case CONTI:
             while(uartTxReady(UART_USB)) {
-               gpioToggle ( LEDB );
                uartTxWrite (UART_USB, txPro.pBuffer[i++]);
                if (--remainSize==0) {
                   if(txPro.callback!=NULL)

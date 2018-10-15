@@ -10,7 +10,8 @@ enum opCodes {
    OP_STACK       =2,
    OP_HEAP        =3,
    OP_STATUS      =4,
-   OP_PERFORMANCE =5
+   OP_PERFORMANCE =5,
+   OP_BOTONES	  =6
 };
 
 enum lineHeadTrailer{
