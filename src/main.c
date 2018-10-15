@@ -16,10 +16,12 @@
 #include "FrameworkEventos.h"
 #include "fe_modulobroadcast.h"
 #include "fe_modulopulsadores.h"
+#include "fe_modulomedicion.h"
 
 //Manejadores de Modulos
 Modulo_t * moduloBroadcast;
 Modulo_t * moduloPulsadores;
+Modulo_t * moduloMedicionPulsadores;
 
 void eventosInit (void);
 
@@ -59,5 +61,6 @@ void eventosInit (void){
 			);
 	moduloBroadcast = RegistrarModulo(manejadorEventosBroadcast,PRIORIDAD_BAJA);
 	moduloPulsadores = RegistrarModulo(manejadorEventosPulsadores,PRIORIDAD_BAJA);
+	moduloMedicionPulsadores = RegistrarModulo(manejadorEventosMedicionPulsadores,PRIORIDAD_BAJA);
 	IniciarTodosLosModulos();
 }

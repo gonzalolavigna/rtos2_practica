@@ -10,6 +10,7 @@
 
 extern Modulo_t * moduloPulsadores;
 extern Modulo_t * moduloBroadcast;
+extern Modulo_t * moduloMedicionPulsadores;
 
 #define BUTTONS_PERIOD		50											//los botones se samplean cada cierto tiempo regular
 #define BOUNCE_TIMES		2											//numero de veces seguidas que se debera capturar el pulsador para darlo por valido
@@ -104,7 +105,8 @@ static void buttonsFsm (void){
 				if( ++b->bounce >= BOUNCE_TIMES ) {		//suficientes veces lo mismo?
 					b->state		= DOWN;				//lo doy por valido y espero
 					EncolarEvento(moduloBroadcast,SIG_PULSADOR_APRETADO,i);
-					debugPrintTeclaEvent(i,b->state);
+					EncolarEvento(moduloMedicionPulsadores,SIG_PULSADOR_APRETADO,i);
+					//debugPrintTeclaEvent(i,b->state); --> Only for DEBUG
 				}
 			}
 			else {										//en donde falle alguno
@@ -122,7 +124,8 @@ static void buttonsFsm (void){
 				if( ++b->bounce >= BOUNCE_TIMES ) {		//ok, sufi. doy por liberado
 					b->state = UP;						//
 					EncolarEvento(moduloBroadcast,SIG_PULSADOR_LIBERADO,i);
-					debugPrintTeclaEvent(i,b->state);
+					EncolarEvento(moduloMedicionPulsadores,SIG_PULSADOR_LIBERADO,i);
+					//debugPrintTeclaEvent(i,b->state); --> ONly for DEBUG
 				}
 			}
 			else {

@@ -12,4 +12,7 @@ typedef enum {
 	TEC4_INDEX,
 } buttonGpioIndex_t;
 
+#define TEC_INDEX_INICIAL  TEC1_INDEX
+#define TEC_INDEX_FINAL    TEC4_INDEX+1
+
 #endif  /*_MODULO_PULSADORES_H_*/
