@@ -5,13 +5,13 @@
 #define TAIL   1 // Cantidad de bytes despues del payload
 
 enum opCodes {
-   OP_TO_MAY      =0,
-   OP_TO_MIN      =1,
-   OP_STACK       =2,
-   OP_HEAP        =3,
-   OP_STATUS      =4,
-   OP_PERFORMANCE =5,
-   OP_BOTONES	  =6
+   OP_TO_MAY      = 0,
+   OP_TO_MIN      = 1,
+   OP_STACK       = 2,
+   OP_HEAP        = 3,
+   OP_STATUS      = 4,
+   OP_PERFORMANCE = 5,
+   OP_BOTONES     = 6
 };
 
 enum lineHeadTrailer{
@@ -46,9 +46,9 @@ typedef enum {
    ETX_STATE
 } parserState_t;
 
-void uartInitParser       ( void      );
-void parserCallback       ( void* nil );
-void Print_Line           ( line_t* l );
-bool_t uartInitLineParser ( void      );
+void     uartInitParser     ( void      );
+void     parserCallback     ( void* nil );
+void     Print_Line         ( line_t* l );
+bool_t   uartInitLineParser ( void      );
 
 #endif

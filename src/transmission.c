@@ -14,25 +14,8 @@
 #include "text_process.h"
 #include "performance.h"
 
-#define TRANSMISION_QUEUE_SIZE 10
-QueueHandle_t     processedQueue;   //una vez procesada la linea, viene a esta cola
 volatile uint32_t transmissionBeginT;
 volatile uint32_t transmissionEndT;
-
-void initTransmit ( void)
-{
-   processedQueue = xQueueCreate ( TRANSMISION_QUEUE_SIZE,sizeof(line_t ));
-}
-
-void transmitTask ( void* nil )
-{
-//    callBackFuncPtr_t callback;
-   line_t l;
-   while (TRUE) {
-     while(xQueueReceive ( processedQueue, &l, portMAX_DELAY )==pdFALSE)
-        ;
-   }
-}
 
 // Callback de transmision proactiva de linea con medida de performance
 void completionHandler ( void * Puart_tp )
@@ -59,9 +42,9 @@ void dynamicTrailer2UartFifo(void)
 }
 void data2UartFifoPlusHeader(uint8_t* data, uint8_t size,uint8_t op, callBackFuncPtr_t callback )
 {
-   dynamicHeader2UartFifo  ( size ,op   );
-          data2UartFifo    ( data ,size,callback);
-   dynamicTrailer2UartFifo (            );
+   dynamicHeader2UartFifo  ( size ,op            );
+   data2UartFifo           ( data ,size,callback );
+   dynamicTrailer2UartFifo (                     );
 }
 void dynamicData2UartFifoPlusHeader(uint8_t* data, uint8_t size,uint8_t op)
 {
