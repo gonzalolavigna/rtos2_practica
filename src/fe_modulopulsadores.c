@@ -7,6 +7,7 @@
 #include "text_process.h"
 #include "pool_array.h"
 #include "transmission.h"
+#include "utilities.h"
 
 extern Modulo_t * moduloPulsadores;
 extern Modulo_t * moduloBroadcast;
@@ -68,7 +69,7 @@ void manejadorEventosPulsadores (Evento_t * evn){
          switch(evn->signal){
             case SIG_TIMEOUT:
                buttonsFsm();
-               timerArmarUnico ( moduloPulsadores,BUTTONS_PERIOD );
+               //timerArmarUnico ( moduloPulsadores,BUTTONS_PERIOD,ISR_OUTSIDE );
                break;
             default:
                break;
@@ -81,7 +82,7 @@ void manejadorEventosPulsadores (Evento_t * evn){
 
 static void moduloPulsadoresInit (Modulo_t * pModulo){
    hardwarePulsadoresInicializado = TRUE;
-   timerArmarUnico ( moduloPulsadores,BUTTONS_PERIOD );
+   timerArmarRepetitivo( moduloPulsadores,BUTTONS_PERIOD,ISR_OUTSIDE );
 }
 
 static void buttonsFsm (void){

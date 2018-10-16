@@ -1,6 +1,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "FrameworkEventos.h"
+#include "utilities.h"
 
 #define  MAX_MODULOS    20
 int      ultimoModulo = 0;
@@ -16,7 +17,7 @@ Modulo_t * RegistrarModulo (fsm_ptr manejadorEventos, int prioridad)
    Modulo_t * pModulo        = &modulos[ultimoModulo];
    pModulo->manejadorEventos = manejadorEventos;
    pModulo->prioridad        = prioridad       ;
-   timerDesarmar( pModulo );
+   timerDesarmar( pModulo ,ISR_OUTSIDE);
    ultimoModulo++;
 
    return pModulo;
