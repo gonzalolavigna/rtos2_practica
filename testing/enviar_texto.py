@@ -128,7 +128,7 @@ with open( (args['nombre_archivo']), 'rt') as archivo:
         cartel_de_envio(args)
         lineas_enviadas = enviar_archivo(archivo, puerto, args['operacion'])
         cartel_de_recepcion()
-        mostrar_respuestas(puerto, lineas_enviadas)
+        mostrar_respuestas(puerto, lineas_enviadas*2)
 
 #===============================================================================
 
