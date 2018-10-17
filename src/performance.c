@@ -33,16 +33,16 @@ void printPerformanceReport(line_t* l)
 {
    uint8_t auxBuf[MAX_REPORT_SIZE];
    uint8_t len;
-   len = snprintf( auxBuf,MAX_REPORT_SIZE, "\r\n"
-         "ID de paquete:%d\r\n"
-         "Largo de paquete:      %d\r\n"
-         "Memoria alojada:       %d\r\n"
-         "Tiempo de llegada:     %d\r\n"
-         "Tiempo de recepcion:   %d\r\n"
-         "Tiempo de inicio:      %d\r\n"
-         "Tiempo de fin:         %d\r\n"
-         "Tiempo de salida:      %d\r\n"
-         "Tiempo de transmision: %d\r\n",
+   len = snprintf( auxBuf,MAX_REPORT_SIZE, ""
+         "ID de paquete:%d "
+         "Largo de paquete:      %d "
+         "Memoria alojada:       %d "
+         "Tiempo de llegada:     %d "
+         "Tiempo de recepcion:   %d "
+         "Tiempo de inicio:      %d "
+         "Tiempo de fin:         %d "
+         "Tiempo de salida:      %d "
+         "Tiempo de transmision: %d ",
          l->token->id,
          l->token->len,
          l->token->mem,
