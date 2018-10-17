@@ -20,8 +20,8 @@ volatile uint32_t transmissionEndT;
 // Callback de transmision proactiva de linea con medida de performance
 void completionHandler ( void * Puart_tp )
 {
-      xSemaphoreGiveFromISR( waitingEndT, NULL);
-      transmissionEndT = now4Isr();
+   xSemaphoreGiveFromISR( waitingEndT, NULL);
+   transmissionEndT = now4Isr();
 }
 void poolPut4DriverProactivo(proactiveDriver_t* D)
 {

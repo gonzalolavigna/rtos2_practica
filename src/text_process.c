@@ -67,14 +67,14 @@ void lowerTask( void* nil )
 }
 
 static void getAndSendStackHighWaterMark (uint8_t op){
-	UBaseType_t uxHighWaterMark;
-	uint8_t auxBuf[MAX_REPORT_SIZE_WATER_MARK];
-	uint8_t len;
-	uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-	len = snprintf( auxBuf,MAX_REPORT_SIZE_WATER_MARK,
-			"TAREA %s: WATER MARK:%d",
-			(op == OP_TO_MAY)?"MAYUSCULIZAR":"MINUSCULIZAR",
-			uxHighWaterMark);
-	dynamicData2UartFifoPlusHeader(auxBuf,len,OP_STATUS);
+   UBaseType_t uxHighWaterMark;
+   uint8_t auxBuf[MAX_REPORT_SIZE_WATER_MARK];
+   uint8_t len;
+   uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+   len = snprintf( auxBuf,MAX_REPORT_SIZE_WATER_MARK,
+         "TAREA %s: WATER MARK:%d",
+         (op == OP_TO_MAY)?"MAYUSCULIZAR":"MINUSCULIZAR",
+         uxHighWaterMark);
+   dynamicData2UartFifoPlusHeader(auxBuf,len,OP_STATUS);
 }
 

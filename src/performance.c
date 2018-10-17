@@ -62,10 +62,10 @@ void performanceTask( void* nil )
    while(TRUE) {
       while(xQueueReceive(performanceQueue,&l,portMAX_DELAY)== pdFALSE)
          ;
-      l.token->proccessBeginT = now();
+      l.token->proccessBeginT     = now();
       toUppercase ( &l );
-      l.token->proccessEndT   = now();
-      transmissionEndT        = 0;
+      l.token->proccessEndT       = now();
+      transmissionEndT            = 0;
       l.token->transmissionBeginT = now();
       data2UartFifoPlusHeader(l.data,l.len,l.op,completionHandler);
 
