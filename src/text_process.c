@@ -14,9 +14,12 @@
 #include "pool_array.h"
 #include "transmission.h"
 #include "performance.h"
+#include "line_parser.h"
 
 QueueHandle_t upperQueue;       //cola para mensajes que seran mayusculizados
 QueueHandle_t lowerQueue;       //para los que seran pasados a minuscula
+
+static void getAndSendStackHighWaterMark (uint8_t op);
 
 void initTextProcess(void)
 {
@@ -46,6 +49,7 @@ void upperTask( void* nil )
          ;
       toUppercase ( &l                              );
       data2UartFifoPlusHeader(l.data,l.len,l.op,(callBackFuncPtr_t )poolPut4DriverProactivo);
+      getAndSendStackHighWaterMark(l.op);
    }
 }
 void lowerTask( void* nil )
@@ -56,6 +60,19 @@ void lowerTask( void* nil )
          ;
       toLowercase ( &l                              );
       data2UartFifoPlusHeader(l.data,l.len,l.op,(callBackFuncPtr_t )poolPut4DriverProactivo);
+      getAndSendStackHighWaterMark(l.op);
    }
+}
+
+static void getAndSendStackHighWaterMark (uint8_t op){
+	UBaseType_t uxHighWaterMark;
+	uint8_t auxBuf[100];
+	uint8_t len;
+	uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+	len = snprintf( auxBuf,100,
+			"TAREA %s: WATER MARK:%d",
+			(op == OP_TO_MAY)?"MAYUSCULIZAR":"MINUSCULIZAR",
+			uxHighWaterMark);
+	dynamicData2UartFifoPlusHeader(auxBuf,len,OP_STATUS);
 }
 
