@@ -31,33 +31,33 @@ QMPool* poolSelect(uint8_t size)
 {
    return &memPool[size/MIN_BLOCK_SIZE];
 }
-void* poolGet(uint8_t size)
+void* poolGet(uint8_t size, uint8_t inIsr)
 {
-  return QMPool_get ( poolSelect ( size ),0 );
+   return QMPool_get ( poolSelect ( size ),0,inIsr );
 }
-void poolPut(uint8_t size,uint8_t* data)
+void poolPut(uint8_t size,uint8_t* data, uint8_t inIsr)
 {
-   QMPool_put ( poolSelect(size ),data );
+   QMPool_put ( poolSelect(size ),data ,inIsr);
 }
 uint16_t poolGetUsedMem4Line(line_t* l)
 {
   return  MIN_BLOCK_SIZE* ( l->len/MIN_BLOCK_SIZE + 1 );
 }
-void poolGet4Line(line_t* l)
+void poolGet4Line(line_t* l, uint8_t inIsr)
 {
-   l->data=poolGet ( l->len );
+   l->data=poolGet ( l->len,inIsr );
 }
-void poolPut4Line(line_t* l)
+void poolPut4Line(line_t* l, uint8_t inIsr)
 {
-   poolPut ( l->len,l->data );
+   poolPut ( l->len,l->data ,inIsr);
 }
-bool poolGet4Token(line_t* l)
+bool poolGet4Token(line_t* l, uint8_t inIsr)
 {
-   l->token=QMPool_get  ( poolSelect(sizeof(token_t)),0 );
+   l->token=QMPool_get  ( poolSelect(sizeof(token_t)),0, inIsr );
    return l->token!=NULL;
 }
-void poolPut4Token(line_t* l)
+void poolPut4Token(line_t* l, uint8_t inIsr)
 {
-   QMPool_put ( poolSelect(sizeof(token_t )) ,l->token );
-   QMPool_put ( poolSelect(l->len         )  ,l->data ) ;
+   QMPool_put ( poolSelect(sizeof(token_t )) ,l->token ,inIsr);
+   QMPool_put ( poolSelect(l->len )          ,l->data  ,inIsr);
 }

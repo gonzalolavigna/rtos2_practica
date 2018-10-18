@@ -52,11 +52,11 @@ typedef struct {
     QMPoolCtr           nMin;      // watewrmark minima
 } QMPool;
 
-void           QMPool_init         ( QMPool * const me, void * const poolSto, uint_fast32_t poolSize, uint_fast16_t blockSize );
-void *         QMPool_get          ( QMPool * const me, uint_fast16_t const margin                                            );
-void           QMPool_put          ( QMPool * const me, void *b                                                               );
-uint_fast16_t  QMPool_getMin       ( QMPool * const me                                                                        );
-char*          Print_Qmpool_Struct ( QMPool* Q,char* S                                                                        );
+void           QMPool_init         ( QMPool * const me ,void * const poolSto       ,uint_fast32_t poolSize ,uint_fast16_t blockSize );
+void *         QMPool_get          ( QMPool * const me ,uint_fast16_t const margin ,uint8_t enISR                                   );
+void           QMPool_put          ( QMPool * const me ,void *b                    ,uint8_t enISR                                   );
+uint_fast16_t  QMPool_getMin       ( QMPool * const me ,uint8_t enISR                                                               );
+char*          Print_Qmpool_Struct ( QMPool* Q         ,char* S                                                                     );
 
 
 #endif

@@ -14,6 +14,7 @@
 #include "pool_array.h"
 #include "transmission.h"
 #include "performance.h"
+#include "utilities.h"
 
 #define PERFORMANCE_QUEUE_SIZE 10
 #define MAX_REPORT_SIZE        255
@@ -73,7 +74,7 @@ void performanceTask( void* nil )
          ;
       l.token->transmissionEndT   = transmissionEndT;
       printPerformanceReport ( &l );
-      poolPut4Token          ( &l );
+      poolPut4Token          ( &l,ISR_OUTSIDE );
    }
 }
 

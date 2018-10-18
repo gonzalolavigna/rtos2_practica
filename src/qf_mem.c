@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "FreeRTOS.h"
 #include "qmpool.h"
+#include "utilities.h"
 
 void QMPool_init(QMPool * const me, void * const poolSto, uint_fast32_t poolSize, uint_fast16_t blockSize)
 {
@@ -30,37 +31,40 @@ void QMPool_init(QMPool * const me, void * const poolSto, uint_fast32_t poolSize
     me->end   = fb;                                 /* the last block in this pool */
 }
 
-void QMPool_put(QMPool * const me, void *b)
+void QMPool_put(QMPool * const me, void *b,uint8_t enISR )
 {
-//   portENTER_CRITICAL();                                  // Enter on critical section
+   uint32_t basepri = 0;
+   basepri= seccionCriticaEntrar(enISR);
       ((QFreeBlock *)b)->next = (QFreeBlock *)me->free_head; /* link into list */
       me->free_head = b;                                     /* set as new head of the free list */
       ++me->nFree;                                           /* one more free block in this pool */
-//   portEXIT_CRITICAL();                                   // Exit from critical section
+   seccionCriticaSalir(enISR,basepri);
 }
 
-void *QMPool_get(QMPool * const me, uint_fast16_t const margin) 
+void *QMPool_get(QMPool * const me, uint_fast16_t const margin,uint8_t enISR )
 {
    QFreeBlock *fb;
-   //portENTER_CRITICAL();                              // Enter on critical section
-   if (me->nFree > (QMPoolCtr)margin) {               /* have more free blocks than the requested margin? */
-      fb            = (QFreeBlock *)me->free_head;    /* get a free block */
-      me->free_head = fb->next;                       /* set the head to the next free block */
-      --me->nFree;                                    /* one less free block */
-      if (me->nMin > me->nFree) me->nMin = me->nFree; /* remember the new minimum */
-   }
-   else
-      fb = (QFreeBlock *)0;
-   //portEXIT_CRITICAL();                               // Exit from critical section
+   uint32_t basepri = 0;
+   basepri= seccionCriticaEntrar(enISR);
+      if (me->nFree > (QMPoolCtr)margin) {               /* have more free blocks than the requested margin? */
+         fb            = (QFreeBlock *)me->free_head;    /* get a free block */
+         me->free_head = fb->next;                       /* set the head to the next free block */
+         --me->nFree;                                    /* one less free block */
+         if (me->nMin > me->nFree) me->nMin = me->nFree; /* remember the new minimum */
+      }
+      else
+         fb = (QFreeBlock *)0;
+   seccionCriticaSalir(enISR,basepri);
    return fb;                                         /* return the block or NULL pointer to the caller */
 }
 
-uint_fast16_t QMPool_getMin(QMPool * const me)
+uint_fast16_t QMPool_getMin(QMPool * const me,uint8_t enISR )
 {
    uint_fast16_t min;
-   portENTER_CRITICAL ( ); // Enter on critical section
-      min = me->nMin     ;
-   portEXIT_CRITICAL  ( ); // Exit from critical section
+   uint32_t basepri = 0;
+   basepri= seccionCriticaEntrar(enISR);
+      min = me->nMin;
+   seccionCriticaSalir(enISR,basepri);
    return min;
 }
 

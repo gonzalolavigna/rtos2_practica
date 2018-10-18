@@ -34,8 +34,8 @@ void timerArmarUnico       ( Modulo_t * modulo, unsigned int timeout, uint8_t en
 {
    uint32_t basepri = 0;
    basepri= seccionCriticaEntrar(enIsr);
-   modulo->timeout_tick = timeout;
-   modulo->periodo      = TIMER_DISABLED;
+      modulo->timeout_tick = timeout;
+      modulo->periodo      = TIMER_DISABLED;
    seccionCriticaSalir(enIsr,basepri);
    return;
 }
@@ -43,8 +43,8 @@ void timerArmarRepetitivo  ( Modulo_t * modulo, unsigned int timeout, uint8_t en
 {
    uint32_t basepri = 0;
    basepri= seccionCriticaEntrar(enIsr);
-   modulo->periodo      = timeout;
-   modulo->timeout_tick = modulo->periodo;
+      modulo->periodo      = timeout;
+      modulo->timeout_tick = modulo->periodo;
    seccionCriticaSalir(enIsr,basepri);
    return;
 }
@@ -52,7 +52,7 @@ void timerRecargar         ( Modulo_t * modulo , uint8_t enIsr)
 {
    uint32_t basepri = 0;
    basepri= seccionCriticaEntrar(enIsr);
-   modulo->timeout_tick = modulo->periodo;
+      modulo->timeout_tick = modulo->periodo;
    seccionCriticaSalir(enIsr,basepri);
    return;
 }
@@ -60,7 +60,7 @@ void timerDesarmar         ( Modulo_t * modulo , uint8_t enIsr)
 {
    uint32_t basepri = 0;
    basepri= seccionCriticaEntrar(enIsr);
-   modulo->timeout_tick = TIMER_DISABLED;
+      modulo->timeout_tick = TIMER_DISABLED;
    seccionCriticaSalir(enIsr,basepri);
    return;
 }

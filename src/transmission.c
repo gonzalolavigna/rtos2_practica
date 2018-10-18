@@ -13,6 +13,7 @@
 #include "pool_array.h"
 #include "text_process.h"
 #include "performance.h"
+#include "utilities.h"
 
 volatile uint32_t transmissionBeginT;
 volatile uint32_t transmissionEndT;
@@ -25,7 +26,7 @@ void completionHandler ( void * Puart_tp )
 }
 void poolPut4DriverProactivo(proactiveDriver_t* D)
 {
-   poolPut(D->size,D->pBuffer);
+   poolPut(D->size,D->pBuffer,ISR_INSIDE);
 }
 void dynamicHeader2UartFifo(uint8_t size,uint8_t op)
 {
@@ -54,7 +55,7 @@ void dynamicData2UartFifoPlusHeader(uint8_t* data, uint8_t size,uint8_t op)
 }
 void dynamicData2UartFifo(uint8_t* data, uint8_t size)
 {
-   uint8_t* Buf=poolGet( size );
+   uint8_t* Buf=poolGet( size ,ISR_OUTSIDE);
    memcpy   ( Buf,data,size ); // ssisi, copio pero alguien tienen que llenar
                                // el pool. en el peor caso copio 2 veces, una
                                // en una local y de la local aca, pero el

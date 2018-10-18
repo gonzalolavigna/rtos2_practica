@@ -11,6 +11,7 @@
 #include "text_process.h"
 #include "pool_array.h"
 #include "performance.h"
+#include "utilities.h"
 
 static  uint32_t lineBeginT;
 static  uint32_t lineEndT;
@@ -39,7 +40,7 @@ bool parseByte(char input, line_t* l)
       case T_STATE:
          l->len    = input;
          dataIndex = 0;
-         poolGet4Line(l);
+         poolGet4Line(l,ISR_INSIDE);
          parserState=l->data!=NULL?DATA_STATE:STX_STATE;
          break;
       case DATA_STATE:
@@ -55,7 +56,7 @@ bool parseByte(char input, line_t* l)
            ans      = true;
         }
         else {
-           poolPut4Line  ( l );
+           poolPut4Line ( l,ISR_INSIDE );
         }
         parserState = STX_STATE;
         break;
@@ -82,7 +83,7 @@ void parserCallback( void* nil ) // Callback para la interrupcion.
                xQueueSendFromISR(lowerQueue ,&l ,&xHigherPriorityTaskWoken);
                break;
             case OP_PERFORMANCE:
-               poolGet4Token(&l);                          // Falta control de error
+               poolGet4Token(&l,ISR_INSIDE);                          // Falta control de error
                l.token->id         = id++;
                l.token->lineBeginT = lineBeginT;
                l.token->lineEndT   = lineEndT;
@@ -91,7 +92,7 @@ void parserCallback( void* nil ) // Callback para la interrupcion.
                xQueueSendFromISR(performanceQueue ,&l ,&xHigherPriorityTaskWoken);
                break;
             default:
-               poolPut4Line(&l);
+               poolPut4Line(&l,ISR_INSIDE);
                break;
          }
    }
