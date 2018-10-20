@@ -56,10 +56,15 @@ void dynamicData2UartFifoPlusHeader(uint8_t* data, uint8_t size,uint8_t op)
 void dynamicData2UartFifo(uint8_t* data, uint8_t size)
 {
    uint8_t* Buf=poolGet( size ,ISR_OUTSIDE);
-   memcpy   ( Buf,data,size ); // ssisi, copio pero alguien tienen que llenar
-                               // el pool. en el peor caso copio 2 veces, una
-                               // en una local y de la local aca, pero el
-                               // codigo queda mas fresco
-   data2UartFifo(Buf, size, (callBackFuncPtr_t )poolPut4DriverProactivo);
+   if(Buf!=NULL) {
+      memcpy   ( Buf,data,size ); // ssisi, copio pero alguien tienen que llenar
+                                  // el pool. en el peor caso copio 2 veces, una
+                                  // en una local y de la local aca, pero el
+                                  // codigo queda mas fresco
+      data2UartFifo(Buf, size, (callBackFuncPtr_t )poolPut4DriverProactivo);
+   }
+   else {
+//      data2UartFifo("---sin espacio----",18,NULL);
+   }
 }
 

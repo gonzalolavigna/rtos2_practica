@@ -77,19 +77,26 @@ void parserCallback( void* nil ) // Callback para la interrupcion.
       if ( parseByte(uartRxRead(UART_USB ), &l))
          switch(l.op) {
             case OP_TO_MAY:
-               xQueueSendFromISR(upperQueue ,&l ,&xHigherPriorityTaskWoken);
+               if(xQueueSendFromISR(upperQueue ,&l ,&xHigherPriorityTaskWoken)!=pdTRUE)
+                  poolPut4Line(&l,ISR_INSIDE);
                break;
             case OP_TO_MIN:
-               xQueueSendFromISR(lowerQueue ,&l ,&xHigherPriorityTaskWoken);
+               if(xQueueSendFromISR(lowerQueue ,&l ,&xHigherPriorityTaskWoken)!=pdTRUE)
+                  poolPut4Line(&l,ISR_INSIDE);
                break;
             case OP_PERFORMANCE:
-               poolGet4Token(&l,ISR_INSIDE);                          // Falta control de error
+               poolGet4Token(&l,ISR_INSIDE);
+               if(l.token!=NULL) {
                l.token->id         = id++;
                l.token->lineBeginT = lineBeginT;
                l.token->lineEndT   = lineEndT;
                l.token->len        = l.len;
                l.token->mem        = poolGetUsedMem4Line(&l);
-               xQueueSendFromISR(performanceQueue ,&l ,&xHigherPriorityTaskWoken);
+               if(xQueueSendFromISR(performanceQueue ,&l ,&xHigherPriorityTaskWoken)!=pdTRUE) 
+                  poolPut4Token(&l,ISR_INSIDE);
+               }
+               else
+                  poolPut4Line(&l,ISR_INSIDE);
                break;
             default:
                poolPut4Line(&l,ISR_INSIDE);

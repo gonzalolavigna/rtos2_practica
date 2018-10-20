@@ -37,6 +37,7 @@ void data2UartFifo(uint8_t* data, uint8_t size,callBackFuncPtr_t Callback )
    uart_txpro.pBuffer  = data;
    uart_txpro.size     = size;
    uart_txpro.callback = Callback;
+//TODO: y si cae uartUsbSendCallback en el medio de una circularBufferWrite y hace una circularBufferRead??? bum..
    circularBufferWrite ( &proactiveTxBuffer ,(uint8_t * )&uart_txpro);
    uartCallbackSet ( UART_USB ,UART_TRANSMITER_FREE ,uartUsbSendCallback ,NULL );
 }
@@ -47,24 +48,24 @@ void uartUsbSendCallback (void * nil)
       case INIT:
          i           = 0;
          remainSize  = 0;
-            bufferState = circularBufferRead( &proactiveTxBuffer, (uint8_t *) &txPro);
-            if( bufferState != CIRCULAR_BUFFER_EMPTY && txPro.size>0) {
-               remainSize = txPro.size;
-               State      = CONTI;
+         bufferState = circularBufferRead( &proactiveTxBuffer, (uint8_t *) &txPro);
+         if( bufferState != CIRCULAR_BUFFER_EMPTY && txPro.size>0) {
+            remainSize = txPro.size;
+            State      = CONTI;
          }
          else
             uartCallbackClr( UART_USB,UART_TRANSMITER_FREE ); // no hay que hacer nada.. me avisa que ya salio el dato
          break;
       case CONTI:
-            while(uartTxReady(UART_USB)) {
-               uartTxWrite (UART_USB, txPro.pBuffer[i++]);
-               if (--remainSize==0) {
-                  if(txPro.callback!=NULL)
-                     txPro.callback(&txPro);          // Llamo al Callback apenas // despacho el ultimo dato
-                  State=INIT;
-                  break;
-               }
-            }
+         while(uartTxReady(UART_USB)) {
+            uartTxWrite (UART_USB, txPro.pBuffer[i++]);
+            if (--remainSize==0) {
+               if(txPro.callback!=NULL)
+                  txPro.callback(&txPro);          // Llamo al Callback apenas // despacho el ultimo dato
+               State=INIT;
+               break;
+           }
+         }
          break;
    }
    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
