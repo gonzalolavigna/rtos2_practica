@@ -17,6 +17,8 @@
 #include "line_parser.h"
 
 #define MAX_REPORT_SIZE_WATER_MARK 40
+#define UPPER_QUEUE_SIZE           10
+#define LOWER_QUEUE_SIZE           10
 
 QueueHandle_t upperQueue;       //cola para mensajes que seran mayusculizados
 QueueHandle_t lowerQueue;       //para los que seran pasados a minuscula
@@ -25,8 +27,8 @@ static void getAndSendStackHighWaterMark (uint8_t op);
 
 void initTextProcess(void)
 {
-   upperQueue       = xQueueCreate ( 10,sizeof(line_t ));
-   lowerQueue       = xQueueCreate ( 10,sizeof(line_t ));
+   upperQueue       = xQueueCreate ( UPPER_QUEUE_SIZE,sizeof(line_t ));
+   lowerQueue       = xQueueCreate ( LOWER_QUEUE_SIZE,sizeof(line_t ));
 }
 
 line_t* toUppercase(line_t* l)
@@ -49,8 +51,8 @@ void upperTask( void* nil )
    while(TRUE) {
       while(xQueueReceive(upperQueue,&l,portMAX_DELAY)== pdFALSE)
          ;
-      toUppercase ( &l                              );
-      data2UartFifoPlusHeader(l.data,l.len,l.op,(callBackFuncPtr_t )poolPut4DriverProactivo);
+      toUppercase ( &l );
+      data2UartFifoPlusHeader(l.data ,l.len ,l.op ,(callBackFuncPtr_t )poolPut4DriverProactivo);
       getAndSendStackHighWaterMark(l.op);
    }
 }
@@ -60,9 +62,9 @@ void lowerTask( void* nil )
    while(TRUE) {
       while( xQueueReceive(lowerQueue,&l,portMAX_DELAY )== pdFALSE)
          ;
-      toLowercase ( &l                              );
-      data2UartFifoPlusHeader(l.data,l.len,l.op,(callBackFuncPtr_t )poolPut4DriverProactivo);
-      getAndSendStackHighWaterMark(l.op);
+      toLowercase ( &l );
+      data2UartFifoPlusHeader(l.data ,l.len ,l.op ,(callBackFuncPtr_t )poolPut4DriverProactivo);
+      getAndSendStackHighWaterMark ( l.op );
    }
 }
 

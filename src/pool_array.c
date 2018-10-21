@@ -25,8 +25,9 @@ void initPoolArray(void)
                    sizeof(memPoolSto[ 0 ]),
                    MIN_BLOCK_SIZE*( i+1 ));
 }
-//para no hacer la asignacino usando if/else, defino una asignacino lineal dividiendo 
-//e indexando un vector de pools de diferentes tamanios, pero se puede cambiar a otro modelo 
+//para no hacer la asignacion usando if/else, defino una asignacino lineal
+//dividiendo e indexando un vector de pools de diferentes tamanios, pero se
+//puede cambiar a otro modelo
 QMPool* poolSelect(uint8_t size)
 {
    return &memPool[size/MIN_BLOCK_SIZE];

@@ -1,9 +1,6 @@
 #ifndef LINE_PARSER
 #define LINE_PARSER
 
-#define HEADER 3 // Cantidad de bytes antes del payload
-#define TAIL   1 // Cantidad de bytes despues del payload
-
 enum opCodes {
    OP_TO_MAY      = 0,
    OP_TO_MIN      = 1,

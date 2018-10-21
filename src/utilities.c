@@ -1,6 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+//workaround para resolver la entrada a seccino critica desde dentro o fuera de una ISR
 uint32_t seccionCriticaEntrar(uint8_t enIsr){
    uint32_t basepri = 0;
    if ( enIsr ) {

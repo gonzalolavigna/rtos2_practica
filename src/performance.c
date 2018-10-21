@@ -22,11 +22,11 @@
 QueueHandle_t     performanceQueue;
 SemaphoreHandle_t waitingEndT;
 
-uint32_t id = 0;
-
 void initPerformance(void)
 {
    performanceQueue = xQueueCreate           ( PERFORMANCE_QUEUE_SIZE,sizeof(line_t ));
+   //el semaforo se usa para esperar a que se termine de enviar el reporte y
+   //tomar el tiempo
    waitingEndT      = xSemaphoreCreateBinary (                                      ) ;
 }
 
@@ -63,17 +63,15 @@ void performanceTask( void* nil )
    while(TRUE) {
       while(xQueueReceive(performanceQueue,&l,portMAX_DELAY)== pdFALSE)
          ;
-      l.token->proccessBeginT     = now();
+      l.token->proccessBeginT     = now ( );
       toUppercase ( &l );
-      l.token->proccessEndT       = now();
-      transmissionEndT            = 0;
-      l.token->transmissionBeginT = now();
-      data2UartFifoPlusHeader(l.data,l.len,l.op,completionHandler);
-
+      l.token->proccessEndT       = now ( );
+      l.token->transmissionBeginT = now ( );
+      data2UartFifoPlusHeader(l.data ,l.len ,l.op ,completionHandler);
       while(xSemaphoreTake( waitingEndT, portMAX_DELAY)==pdFALSE)
          ;
-      l.token->transmissionEndT   = transmissionEndT;
-      printPerformanceReport ( &l );
+      l.token->transmissionEndT   = readTransmissionEndT();
+      printPerformanceReport ( &l             );
       poolPut4Token          ( &l,ISR_OUTSIDE );
    }
 }

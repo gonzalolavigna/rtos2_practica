@@ -15,8 +15,12 @@
 #include "performance.h"
 #include "utilities.h"
 
-volatile uint32_t transmissionBeginT;
-volatile uint32_t transmissionEndT;
+uint32_t transmissionEndT;
+
+uint32_t readTransmissionEndT(void)
+{
+   return transmissionEndT;
+}
 
 // Callback de transmision proactiva de linea con medida de performance
 void completionHandler ( void * Puart_tp )
@@ -57,14 +61,21 @@ void dynamicData2UartFifo(uint8_t* data, uint8_t size)
 {
    uint8_t* Buf=poolGet( size ,ISR_OUTSIDE);
    if(Buf!=NULL) {
-      memcpy   ( Buf,data,size ); // ssisi, copio pero alguien tienen que llenar
-                                  // el pool. en el peor caso copio 2 veces, una
-                                  // en una local y de la local aca, pero el
-                                  // codigo queda mas fresco
+      memcpy ( Buf,data,size ); // ssisi, copio pero alguien tienen que
+                                // llenar el pool. en el peor casos copio 2
+                                // veces, una en una local dentro de la funcion
+                                // que genera los datos, por ejemplo con
+                                // sprintf y luego aca al pedir el pool
+                                // traspaso los datos. Cada funcion podria
+                                // pedir el pool y evitar este cpy, pero
+                                // deberia tambien manejar el error de que no
+                                // hay pool y demas, con esto el codigo de
+                                // envio queda de 1 linea y el manejo de
+                                // errores en un solo lugar. Estas funciones
+                                // ofrecen las 2 alternativas, cada funcion
+                                // decidira cual le conviene
       data2UartFifo(Buf, size, (callBackFuncPtr_t )poolPut4DriverProactivo);
    }
-   else {
-//      data2UartFifo("---sin espacio----",18,NULL);
-   }
+   //si no hay espacio para enviar, se descarta el envio
 }
 

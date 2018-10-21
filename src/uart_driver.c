@@ -28,7 +28,8 @@ circularBufferStatus_t  bufferState;
 void initUartDriver (void){
    uartConfig    ( UART_USB ,115200 );
    uartInterrupt ( UART_USB ,true   );
-   uartWriteByte ( UART_USB, '\0'   ); // WAF?? asi lo pide sapi..ver los ejemplos de uart con irq
+   uartWriteByte ( UART_USB, '\0'   ); // WAF?? asi lo pide sapi..ver los
+                                       // ejemplos de uart con irq
    circularBufferInit ( proactiveTxBuffer, sizeof(proactiveDriver_t ), TXPRO_ITEMS );
 }
 void data2UartFifo(uint8_t* data, uint8_t size,callBackFuncPtr_t Callback )
@@ -37,7 +38,8 @@ void data2UartFifo(uint8_t* data, uint8_t size,callBackFuncPtr_t Callback )
    uart_txpro.pBuffer  = data;
    uart_txpro.size     = size;
    uart_txpro.callback = Callback;
-//TODO: y si cae uartUsbSendCallback en el medio de una circularBufferWrite y hace una circularBufferRead??? bum..
+   //TODO: y si cae uartUsbSendCallback en el medio de una circularBufferWrite y
+   //hace una circularBufferRead??? bum..no esta pasando, pero habria que consiederlo
    circularBufferWrite ( &proactiveTxBuffer ,(uint8_t * )&uart_txpro);
    uartCallbackSet ( UART_USB ,UART_TRANSMITER_FREE ,uartUsbSendCallback ,NULL );
 }
@@ -54,19 +56,28 @@ void uartUsbSendCallback (void * nil)
             State      = CONTI;
          }
          else
-            uartCallbackClr( UART_USB,UART_TRANSMITER_FREE ); // no hay que hacer nada.. me avisa que ya salio el dato
+            uartCallbackClr( UART_USB,UART_TRANSMITER_FREE ); // no hay que
+                                                              // hacer nada.. me avisa que ya salio el dato
          break;
       case CONTI:
          while(uartTxReady(UART_USB)) {
             uartTxWrite (UART_USB, txPro.pBuffer[i++]);
             if (--remainSize==0) {
                if(txPro.callback!=NULL)
-                  txPro.callback(&txPro);          // Llamo al Callback apenas // despacho el ultimo dato
+                  //considerar que el callback podria requerir cambiar la tarea
+                  //de retorno al salir de esta Irs, pero como no tiene valor
+                  //de retorno no se esta haciendo y habra un delay entre que
+                  //sale de esta isr y se atiende aquella tarea que fue
+                  //afectada por este callback
+                  txPro.callback(&txPro);                     // Llamo al Callback apenas despacho
+                                                              // el ultimo dato
                State=INIT;
                break;
            }
          }
          break;
    }
-   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+   portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // nadie modifica la vasriable
+                                                 // con lo cual retorna a la tarea desde donde salto la isr
 }

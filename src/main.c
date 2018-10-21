@@ -31,10 +31,10 @@ int main(void)
 {
    boardConfig     ( );
    initPoolArray   ( ); // define los arreglos de pools para luego usar
-   initUartDriver  ( );
+   initUartDriver  ( ); // inicializa la uart segun sapi
    initTextProcess ( ); // inicializa las colas de frtos que se usaran y alguna otra cosa
    initPerformance ( ); // cola de performance
-   uartInitParser  ( );
+   uartInitParser  ( ); // setea el callback para rx de uart
    eventosInit     ( );
 
    xTaskCreate ( upperTask       ,"uppercasing" ,configMINIMAL_STACK_SIZE*3 ,0 ,tskIDLE_PRIORITY+2 ,0 );
