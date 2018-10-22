@@ -12,6 +12,10 @@ enum {
 static bool_t timerHabilitado ( Modulo_t * m );
 static bool_t timerCorriendo  ( Modulo_t * m );
 
+//En el protitpo de todas las funciones que usa este servicio se agrega el workarount para hacer lo de seccion critica uint8_t enIsr.
+//Las funciones seccionCriticaEntrar y seccionCriticaSalir estan en utilities.h
+//De no hacer esto se crashea el sistema.
+
 void     vApplicationTickHook       ( void )
 {
    int nro_modulo;

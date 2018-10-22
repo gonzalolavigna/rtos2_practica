@@ -22,6 +22,11 @@ static bool isValorValid        ( Evento_t * evn     );
 static void ledOn               ( Evento_t * evn     );
 static void ledOff              ( Evento_t * evn     );
 
+//En el parametro del evento viene el led que hay que prender, en verdad se manda el indica del ledArray que hay que prender y apagar.
+//Tambien se encarga de apagar todos los leds durante la inicializacion.
+//Se verifica que los valores de los leds esten en el margen esperado porque podriamos estar activando un led incorrecto en caso que haya un errorv
+//en el parametro del led a prender o apagar.
+
 void manejadorEventosBroadcast (Evento_t * evn)
 {
    switch ( estado ) {

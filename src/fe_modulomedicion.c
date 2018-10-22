@@ -13,11 +13,13 @@
 
 #define MAX_REPORT_MEDICION_PULSADORES_SIZE     255
 
+//Posibles estados del handler de eventos
 typedef enum estadoModuloMedicionPulsadoresEnum {
    sMEDICION_IDLE     = 0        ,
    sMEDICION_MIDIENDO_PULSADORES ,
 } estadoModuloMedicionPulsadoresEnum;
 
+//Estados de la maquina de estado de los botones que espera los eventos de distintos botones.
 typedef enum {
    ESPERANDO_PULSACION = 0,
    ESPERANDO_LIBERACION
@@ -31,6 +33,7 @@ typedef struct {
 } medicionPulsador_t;
 
 static int        estado = sMEDICION_IDLE;
+//Arreglo con la informacion de los distintos pulsadores con sus respectivas mediciones.
 static medicionPulsador_t  medicionPulsadores []   = {
       // inicializo en orden segun la estructura para que quepa en pantalla.
       //   .tec    .elec, .bounce      .state .ack .ackTout
@@ -44,6 +47,8 @@ static void       medicionPulsadorFsm   ( Evento_t * evn                        
 static uint32_t   nowMedicionPulsadores ( void                                       );
 static void       printPulsadoresEvent  ( const medicionPulsador_t* medicionPulsador );
 
+//Se entra a la FSM de los pulsadores ya sea con las signal SIG_PULSADOR_APRETADO y SIG_PULSADOR_LIBERADO.
+//No se considera necesario que este manejador de eventos tenga mas estados.
 void manejadorEventosMedicionPulsadores (Evento_t * evn){
    switch ( estado ) {
       case sMEDICION_IDLE:
@@ -70,6 +75,8 @@ void manejadorEventosMedicionPulsadores (Evento_t * evn){
    }
 }
 
+//Recorre el vector con la informacion de la medicion de losp ulsadores y se encarga de distinguir para que pulsador corresponde la medicion.
+//Actualiza los valores de medicion. Siempre se imprime el reporte cuando se detecta la liberacion de un pulsador.
 static void medicionPulsadorFsm (Evento_t * evn){
    int i;
    for ( i=TEC_INDEX_INICIAL;i < TEC_INDEX_FINAL;i++ ) {
@@ -98,7 +105,7 @@ static void medicionPulsadorFsm (Evento_t * evn){
 uint32_t nowMedicionPulsadores  (void){
    return (uint32_t) xTaskGetTickCount();
 }
-
+//Imprime utilizando el driver de UART de las practicas anteriores el tiempo en ticks que estuvo pulsada una tecla.
 static void printPulsadoresEvent(const medicionPulsador_t* medicionPulsador){
    uint8_t auxBuf[MAX_REPORT_MEDICION_PULSADORES_SIZE];
    uint8_t len;

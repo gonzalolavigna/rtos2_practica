@@ -50,9 +50,15 @@ int main(void)
 void eventosInit (void){
    queEventosBaja = xQueueCreate(15, sizeof(Evento_t));
    xTaskCreate ( taskDespacharEventos ,"Despachador Eventos" ,configMINIMAL_STACK_SIZE*3 ,(void* )queEventosBaja ,tskIDLE_PRIORITY+1 ,NULL);
+   //Se colocan todos los evento en la cola  de prioridad baja porque no tenemos nada que exija mas prioridad
+   //Se observa el funcionamiento por testing de esta asignacion y no se observo ningun problema
+   //Por deformacion queda esdte nombre pero este handler de evento maneja los leds
    moduloBroadcast          = RegistrarModulo(manejadorEventosBroadcast          ,PRIORIDAD_BAJA);
    moduloPulsadores         = RegistrarModulo(manejadorEventosPulsadores         ,PRIORIDAD_BAJA);
    moduloMedicionPulsadores = RegistrarModulo(manejadorEventosMedicionPulsadores ,PRIORIDAD_BAJA);
+   //Esto surge para implimentar los mensajes del heap que salen una vez. Lo manejamos con signal
+   //y eventos. Claramente esto se implemento al final. La potencia que vemos a esto a que mensajes
+   //que querramos reportar una vez quedan atados a este handler.
    moduloMensajesAsincronicos= RegistrarModulo(manejadorEventosMensajesAsincronicos ,PRIORIDAD_BAJA);
    IniciarTodosLosModulos();
 }
